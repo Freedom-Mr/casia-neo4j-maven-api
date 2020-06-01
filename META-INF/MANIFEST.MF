@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Class-Path: neo4j-java-driver-1.7.5.jar casia-util-1.0.4.jar slf4j-api
+ -1.7.30.jar log4j-1.2.17.jar fastjson-1.2.62.jar slf4j-log4j12-1.7.30
+ .jar
+Main-Class: casia.isiteam.api.neo4j.App
+
