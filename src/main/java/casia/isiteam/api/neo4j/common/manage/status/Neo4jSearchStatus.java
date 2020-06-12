@@ -1,6 +1,6 @@
 package casia.isiteam.api.neo4j.common.manage.status;
 
-import casia.isiteam.api.neo4j.common.manage.parms.BasicParms;
+import casia.isiteam.api.neo4j.util.Builder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +12,13 @@ import java.util.List;
  * Created by casia.wzy on 2020/5/26
  * Email: zhiyou_wang@foxmail.com
  */
-public class Neo4jSearchStatus extends BasicParms {
-    protected Long skip;
-    protected Long limit;
+public class Neo4jSearchStatus  extends Builder {
+    protected Long skip = 0L;
+    protected Long limit = 25L;
     protected List<String> returnFields = new ArrayList<>();
-
-    protected String cql;
+    protected boolean openTableData = true;
+    protected boolean openNodeRelation = false;
+    protected String page(){
+        return BLANK+SKIP+BLANK+this.skip+BLANK+LIMIT+BLANK+this.limit+BLANK;
+    }
 }

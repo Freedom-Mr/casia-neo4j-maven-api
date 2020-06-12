@@ -3,8 +3,7 @@ package casia.isiteam.api.neo4j.common.entity.vo;
 import casia.isiteam.api.neo4j.common.manage.parms.BasicParms;
 import casia.isiteam.api.toolutil.Validator;
 import casia.isiteam.api.toolutil.regex.CasiaRegexUtil;
-import org.neo4j.driver.v1.net.ServerAddress;
-
+import org.apache.commons.codec.digest.DigestUtils;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +16,7 @@ import java.util.List;
  */
 public class _Entity_Driver extends BasicParms {
     private String dbname;
-    private List<ServerAddress> bolts = new ArrayList<>();
+    private String md5;
     private List<String> address = new ArrayList<>();
     private String username;
     private String password;
@@ -31,10 +30,6 @@ public class _Entity_Driver extends BasicParms {
             if( CasiaRegexUtil.isMatch(blot,IP) ){
                 continue;
             };
-            ServerAddress serverAddress = ServerAddress.of(blot.split(COLON)[0],Integer.parseInt(blot.split(COLON)[1]) );
-            if( !this.bolts.contains(serverAddress) ){
-                this.bolts.add(serverAddress);
-            }
             if( !this.address.contains(blot) ){
                 this.address.add(blot);
             }
@@ -45,10 +40,6 @@ public class _Entity_Driver extends BasicParms {
             if( CasiaRegexUtil.isMatch(blot,IP) ){
                 continue;
             };
-            ServerAddress serverAddress = ServerAddress.of(blot.split(COLON)[0],Integer.parseInt(blot.split(COLON)[1]) );
-            if( !this.bolts.contains(serverAddress) ){
-                this.bolts.add(serverAddress);
-            }
             if( !this.address.contains(blot) ){
                 this.address.add(blot);
             }
@@ -63,10 +54,6 @@ public class _Entity_Driver extends BasicParms {
             if( CasiaRegexUtil.isMatch(blot,IP) ){
                 continue;
             };
-            ServerAddress serverAddress = ServerAddress.of(blot.split(COLON)[0],Integer.parseInt(blot.split(COLON)[1]) );
-            if( !this.bolts.contains(serverAddress) ){
-                this.bolts.add(serverAddress);
-            }
             if( !this.address.contains(blot) ){
                 this.address.add(blot);
             }
@@ -83,14 +70,11 @@ public class _Entity_Driver extends BasicParms {
         this.dbname = dbname;
     }
 
-    public List<ServerAddress> getBolts() {
-        return bolts;
-    }
     public String getBolt() {
         return Validator.check(this.address) ? BOLT_COLON_SLASH+address.stream().findFirst().get() : NULL;
     }
-    public void setBolts(List<ServerAddress> bolts) {
-        this.bolts = bolts;
+    public String getJdbcBolt() {
+        return Validator.check(this.address) ? JDBC_BOLT_COLON_SLASH+address.stream().findFirst().get() : NULL;
     }
 
     public String getUsername() {
@@ -107,5 +91,11 @@ public class _Entity_Driver extends BasicParms {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String hexMd5() {
+        StringBuffer sb = new StringBuffer();
+        this.address.forEach(s->{ sb.append(s);});
+        return DigestUtils.md5Hex(this.username+sb+this.password );
     }
 }

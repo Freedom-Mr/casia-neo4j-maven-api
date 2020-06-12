@@ -5,14 +5,12 @@ import casia.isiteam.api.neo4j.common.entity.result.NodeInfo;
 import casia.isiteam.api.neo4j.common.entity.result.RelationInfo;
 import casia.isiteam.api.neo4j.datasource.dbdao.Neo4jCommonDb;
 import casia.isiteam.api.neo4j.operation.interfaces.Neo4jOperationApi;
-import casia.isiteam.api.neo4j.util.CqlBuilder;
+import casia.isiteam.api.neo4j.util.LogsUtil;
+import casia.isiteam.api.neo4j.util.build.AddBlank;
 import casia.isiteam.api.toolutil.Validator;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,24 +33,35 @@ public class TreeServer extends Neo4jCommonDb implements Neo4jOperationApi.TreeA
      */
     public GraphResult searchAllTreeByLables(List<String> labels){
         if(!Validator.check(labels)){
+            logger.warn(LogsUtil.compositionLogEmpty("labels"));
             return new GraphResult();
         }
         StringBuffer cql = new StringBuffer();
-        String node_a_asKey= CqlBuilder.asKey();
-        String node_b_asKey= CqlBuilder.asKey();
-        String relation_asKey= CqlBuilder.asKey();
         cql.append(MATCH).
-                append(CqlBuilder.node(node_a_asKey,labels)).
+                append( node(A,labels) ).
+                append( AddBlank.addBlank(OPTIONAL) ).
+                append( MATCH ).
+                append(node(B,labels)).
                 append( CROSS ).
-                append(CqlBuilder.relation(relation_asKey)).
+                append(relation(R)).
                 append( CROSS ).
-                append( CqlBuilder.node() ).
-                append( COMMA ).
-                append( CqlBuilder.node(node_b_asKey,labels) ).
-                append(CqlBuilder.returnField(null,null,0L,1000L)
-                );
-        return executeReadCql(cql.toString());
+                append( node() ).
+                append(returnField(null,null,0L,1000L));
+        return executeDruidReadCql(this.openTableData,cql.toString());
+    }
+    /**
+     * search all tree
+     * @param labels
+     * @return
+     */
+    public JSONArray searchAllJsonTreeAndCountByLables(List<String> labels){
+        JSONArray jsonTree = new JSONArray();
+        GraphResult graphResult = searchAllTreeByLables(labels);
 
+        if( Validator.check(graphResult.getNodeInfos()) ){
+            parseTree(true,jsonTree,graphResult.getNodeInfos(),graphResult.getRelationInfos(),new ArrayList<>(),1);
+        }
+        return jsonTree;
     }
     /**
      * search all tree
@@ -64,11 +73,11 @@ public class TreeServer extends Neo4jCommonDb implements Neo4jOperationApi.TreeA
         GraphResult graphResult = searchAllTreeByLables(labels);
 
         if( Validator.check(graphResult.getNodeInfos()) ){
-            parseTree(jsonTree,graphResult.getNodeInfos(),graphResult.getRelationInfos(),new ArrayList<>(),1);
+            parseTree(false,jsonTree,graphResult.getNodeInfos(),graphResult.getRelationInfos(),new ArrayList<>(),1);
         }
         return jsonTree;
     }
-    private void parseTree(JSONArray jsonArray , List<NodeInfo> nodeInfos, List<RelationInfo> relationInfos , List<NodeInfo> nextNodeInfos, int hierarchy_number){
+    private void parseTree(boolean searchCount,JSONArray jsonArray , List<NodeInfo> nodeInfos, List<RelationInfo> relationInfos , List<NodeInfo> nextNodeInfos, int hierarchy_number){
         if( hierarchy_number == 1 ){
             nodeInfos.stream().filter(s->  Integer.parseInt( s.getParameters().get(HIERARCHY).toString() ) == hierarchy_number ).forEach(s->{
                 jsonArray.add(JSONObject.parseObject(JSONObject.toJSONString(s)) );
@@ -91,10 +100,38 @@ public class TreeServer extends Neo4jCommonDb implements Neo4jOperationApi.TreeA
             });
             if( Validator.check(child) ){
                 JSONArray newJson = new JSONArray();
-                parseTree( newJson, nodeInfos, relationInfos ,child , hierarchy_number+1);
+                parseTree(searchCount, newJson, nodeInfos, relationInfos ,child , hierarchy_number+1);
                 jsonArray.getJSONObject(i).put(NEXT,newJson);
+                if( searchCount ){
+                    long sum = 0L;
+                    for(Object s:newJson){
+                        long count = JSON.parseObject(s.toString()).getLong(COUNT);
+                        sum = sum +count;
+                    }
+                    jsonArray.getJSONObject(i).put(COUNT,sum);
+                }
+            }else{
+                if( searchCount ){
+                    jsonArray.getJSONObject(i).put(COUNT,searchNodeTotalByLabel( Arrays.asList(jsonObject.getJSONObject(PARAMETERS).getString(_NAME) )));
+                }
             }
         }
         jsonArray.sort(Comparator.comparing(obj -> ((JSONObject) obj).getJSONObject(PARAMETERS).getInteger(SORT)));
     }
+
+    private long searchNodeTotalByLabel(List<String> labels){
+        StringBuffer cql = new StringBuffer();
+        String n_asKey= asKey();
+        cql.append(MATCH).
+                append( !Validator.check(labels) ? node(n_asKey) : node(n_asKey,labels) ).
+                append( returnCount(n_asKey)
+                );
+        List<LinkedHashMap<String,Object>> counts = executeDruidReadCql(this.openTableData,cql.toString()).getKwds();
+        if( Validator.check(counts) ){
+            Optional<Object> count =  counts.get(0).values().stream().findFirst();
+           return Long.parseLong(count.get().toString());
+        }
+        return 0L;
+    }
+
 }

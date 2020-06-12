@@ -3,10 +3,7 @@ package casia.isiteam.api.neo4j.router;
 import casia.isiteam.api.neo4j.common.entity.vo._Entity_Driver;
 import casia.isiteam.api.neo4j.common.manage.status.Neo4jDriverStatus;
 import casia.isiteam.api.neo4j.operation.interfaces.Neo4jOperationApi;
-import casia.isiteam.api.neo4j.operation.service.CreateServer;
-import casia.isiteam.api.neo4j.operation.service.DeleteServer;
-import casia.isiteam.api.neo4j.operation.service.SearchServer;
-import casia.isiteam.api.neo4j.operation.service.TreeServer;
+import casia.isiteam.api.neo4j.operation.service.*;
 
 /**
  * ClassName: ApiRouter
@@ -53,5 +50,12 @@ public class ApiRouter extends Routers{
         ApiRouter.deleteRouter = deleteRouter;
     }
 
+    public static Neo4jOperationApi.UpdateApi getUpdateRouter(_Entity_Driver entity_driver) {
+        dbinfo = entity_driver;
+        return updateRouter = new UpdateServer();
+    }
 
+    public static void setUpdateRouter(Neo4jOperationApi.UpdateApi updateRouter) {
+        ApiRouter.updateRouter = updateRouter;
+    }
 }

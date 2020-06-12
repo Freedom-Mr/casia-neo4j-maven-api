@@ -1,14 +1,14 @@
 package casia.isiteam.api.neo4j.operation.service;
 
 import casia.isiteam.api.neo4j.common.entity.model.RelationshipInfo;
-import casia.isiteam.api.neo4j.common.entity.result.GraphResult;
 import casia.isiteam.api.neo4j.common.entity.result.NodeInfo;
+import casia.isiteam.api.neo4j.common.enums.ConditionLevel;
 import casia.isiteam.api.neo4j.common.enums.CreateType;
 import casia.isiteam.api.neo4j.datasource.dbdao.Neo4jCommonDb;
 import casia.isiteam.api.neo4j.operation.interfaces.Neo4jOperationApi;
-import casia.isiteam.api.neo4j.util.CqlBuilder;
+import casia.isiteam.api.neo4j.util.Builder;
+import casia.isiteam.api.neo4j.util.LogsUtil;
 import casia.isiteam.api.toolutil.Validator;
-import org.neo4j.driver.v1.AccessMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,16 +24,25 @@ import java.util.List;
 public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.CreateApi {
     private Logger logger = LoggerFactory.getLogger( this.getClass());
 
-    public GraphResult create(String cql){
+    public boolean create(String cql){
         if( Validator.check(cql) ){
-            return executeWriteCql(cql);
+            return executeDruidWriteCql(cql);
         }
-        return new GraphResult();
+        logger.warn(LogsUtil.compositionLogEmpty(" cql "));
+        return false;
     }
-    public boolean create(String cql,Object ... keysAndValues){
+    public boolean create(String cql,Object ... values){
         if( Validator.check(cql) ){
-            return executeWriteCql(cql,keysAndValues);
+            return executeDruidWriteCql(cql,values);
         }
+        logger.warn(LogsUtil.compositionLogEmpty(" cql "));
+        return false;
+    }
+    public boolean create(String cql,List<Object[]> values){
+        if( Validator.check(cql) ){
+            return executeDruidWriteCql(cql,values);
+        }
+        logger.warn(LogsUtil.compositionLogEmpty(" cql "));
         return false;
     }
     /**
@@ -43,9 +52,11 @@ public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.Cre
      * @return
      */
    public boolean createNode(CreateType createType , NodeInfo ... node){
-       List<String> cqls = CqlBuilder.createNodeBuilder(createType,node);
+       List<String> cqls = buildCreateNodeCql(createType,node);
        if( Validator.check(cqls) ){
-           executeWriteCql(cqls);
+           cqls.forEach(cql->{
+               executeDruidWriteCql(cql);
+           });
        }
        return true;
    }
@@ -56,10 +67,12 @@ public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.Cre
      * @param relationInfos
      * @return
      */
-    public boolean createRelationBuilder(CreateType model, RelationshipInfo... relationInfos){
-        List<String> cqls = CqlBuilder.createRelationBuilder(model,relationInfos);
+    public boolean createRelationByNodeInfoBuilder(CreateType model, RelationshipInfo... relationInfos){
+        List<String> cqls = buildCreateNodeRelationCql(model,relationInfos);
         if( Validator.check(cqls) ){
-            executeWriteCql(cqls);
+            cqls.forEach(cql->{
+                executeDruidWriteCql(cql);
+            });
         }
         return true;
     }
@@ -70,9 +83,11 @@ public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.Cre
      * @return
      */
     public boolean createRelationByNodeIdBuilder(CreateType model, RelationshipInfo ... relationInfos){
-        List<String> cqls = CqlBuilder.createRelationByNodeIdBuilder(model,relationInfos);
+        List<String> cqls = buildCreateNodeRelationByNodeId(model,relationInfos);
         if( Validator.check(cqls) ){
-            executeWriteCql(cqls);
+            cqls.forEach(cql->{
+                executeDruidWriteCql(cql);
+            });
         }
         return true;
     }
@@ -84,10 +99,26 @@ public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.Cre
      * @return
      */
     public boolean createRelationByNodeUuIdBuilder(CreateType model, RelationshipInfo ... relationInfos){
-        List<String> cqls = CqlBuilder.createRelationByNodeUuIdBuilder(model,relationInfos);
+        List<String> cqls = buildCreateNodeRelationByNodeUuIdCql(model,relationInfos);
         if( Validator.check(cqls) ){
-            executeWriteCql(cqls);
+            cqls.forEach(cql->{
+                executeDruidWriteCql(cql);
+            });
         }
         return true;
     }
+
+    /**
+     * add label to node by node's id
+     * @param _id
+     * @param labels
+     * @return
+     */
+    @Override
+    public boolean addLabelByNodeId(long _id, List<String> labels) {
+        return executeDruidWriteCql(s().append(MATCH).append(node(A)).append(where(A, ConditionLevel.MUST.getLevel(),_id)).
+                append(set(A,labels)).toString());
+    }
+
+
 }

@@ -120,7 +120,14 @@ public class RelationInfo {
         }
         return this;
     }
-
+    public RelationInfo setParameters(String key,Object value) {
+        if( Validator.check(key) ){
+            if( !this.parameters.containsKey(key) ){
+                this.parameters.put(key,value);
+            }
+        }
+        return this;
+    }
     public Object get_uuId() {
         return _uuId;
     }

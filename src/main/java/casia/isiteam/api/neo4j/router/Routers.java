@@ -15,4 +15,5 @@ public class Routers extends Neo4jDriverStatus {
     protected static Neo4jOperationApi.QueryApi queryRouter;
     protected static Neo4jOperationApi.DeleteApi deleteRouter;
     protected static Neo4jOperationApi.TreeApi treeRouter;
+    protected static Neo4jOperationApi.UpdateApi updateRouter;
 }

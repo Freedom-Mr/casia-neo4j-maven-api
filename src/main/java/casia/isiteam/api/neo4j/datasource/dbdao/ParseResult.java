@@ -5,6 +5,8 @@ import casia.isiteam.api.neo4j.common.entity.result.NodeInfo;
 import casia.isiteam.api.neo4j.common.entity.result.RelationInfo;
 import casia.isiteam.api.neo4j.common.manage.parms.BasicParms;
 import casia.isiteam.api.toolutil.Validator;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
@@ -12,10 +14,10 @@ import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
 import org.neo4j.driver.v1.types.Relationship;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Field;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * ClassName: ParseResult
@@ -24,21 +26,21 @@ import java.util.Map;
  * Created by casia.wzy on 2020/5/30
  * Email: zhiyou_wang@foxmail.com
  */
-public class ParseResult extends BasicParms {
+public class ParseResult extends ParseValues  {
+
     public static GraphResult parseResult(StatementResult statementResult){
         GraphResult graphResult= new GraphResult();
 
         Map<Long, NodeInfo> nodeInfoMap = new HashMap<>();
         Map<Long, RelationInfo> relationInfoMap = new HashMap<>();
 
+        int nums = 1;
         while (statementResult.hasNext()) {
             Record record = statementResult.next();
             List<Value> values = record.values();
 
             List<Object> list = new ArrayList<>();
             values.forEach(value->{
-//                System.out.println(value.type().name());
-
                 switch ( value.type().name() ) {
                     case NODE:
                         Node node = value.asNode();
@@ -106,8 +108,7 @@ public class ParseResult extends BasicParms {
                         list.add(value.asLocalDateTime());
                         break;
                     case DATE_TIME:
-                        list.add(value.asOffsetDateTime());
-                        System.out.println(value);
+                        list.add(value.asLocalDateTime());
                         break;
                     case DURATION:
                         list.add(value.asIsoDuration());
@@ -117,9 +118,9 @@ public class ParseResult extends BasicParms {
                 }
             });
             if( Validator.check(list) ){
-                graphResult.setKwds(list.toArray());
+//                graphResult.setKwds(nums+NONE,list.toArray());
             }
-
+            nums++;
         }
 
         nodeInfoMap.forEach((k,v)->{
@@ -132,45 +133,98 @@ public class ParseResult extends BasicParms {
         return graphResult;
     }
 
-    private static void parseNode(Node node, Map<Long,NodeInfo> nodeInfoMap){
-        List<String> list = new ArrayList<>();
-        node.labels().forEach(s->list.add(s));
+    public static GraphResult parseResult(ResultSet result,boolean openTableData) throws SQLException {
+        GraphResult graphResult= new GraphResult();
 
-        if( nodeInfoMap.containsKey(node.id()) ){
-            nodeInfoMap.get(node.id()).
-                    setId(node.id()).
-                    setLabels( list ).
-                    setParameters(node.asMap()).
-                    set_uuId(node.asMap().containsKey(_UUID) ?node.asMap().get(_UUID) : NULL );
-        }else{
-            nodeInfoMap.put(node.id(),
-                    new NodeInfo().
-                            setId(node.id()).
-                            setLabels( list ).
-                            setParameters(node.asMap()).
-                            set_uuId(node.asMap().containsKey(_UUID) ?node.asMap().get(_UUID) : NULL )
-            );
+        Map<Long, NodeInfo> nodeInfoMap = new HashMap<>();
+        Map<Long, RelationInfo> relationInfoMap = new HashMap<>();
+        List<LinkedHashMap<String,Object>> kwds = new ArrayList<>();
+
+        while (result.next()) {
+            LinkedHashMap<String,Object> kwd_map = new LinkedHashMap<>();
+            int columnNum = result.getMetaData().getColumnCount();
+            for(int i = 1; i <= columnNum; i++){
+                String columnName = result.getMetaData().getColumnName(i);
+                Object columnValue = result.getObject(i);
+                // all node and relation
+                transafeData(columnValue,nodeInfoMap,relationInfoMap);
+                // all column data
+                if( openTableData ){
+                    transafeData(columnName,columnValue,kwd_map);
+                }
+            }
+            if( openTableData ){
+                kwds.add(kwd_map);
+            }
+        }
+        nodeInfoMap.forEach((k,v)->{
+            graphResult.setNodeInfos(v);
+        });
+        relationInfoMap.forEach((k,v)->{
+            graphResult.setRelationInfos(v);
+        });
+        graphResult.setKwds(kwds);
+        return graphResult;
+    }
+    private static void transafeData(Object value,Map<Long, NodeInfo> nodeInfoMap ,Map<Long, RelationInfo> relationInfoMap){
+        if( value instanceof HashMap){
+            Map<String,Object> map = ((HashMap) value);
+            if( map.containsKey(_LABELS) ){
+                parseNode(map,nodeInfoMap);
+            }else if( map.containsKey(_TYPE) ){
+                parseRelation(map,relationInfoMap);
+            }
+        }else if( value instanceof ArrayList){
+            List<Object> list = (ArrayList<Object>) value;
+            list.forEach(s->{
+                transafeData(s,nodeInfoMap,relationInfoMap);
+            });
+        }else if( value instanceof Node ){
+            parseNode((Node)value,nodeInfoMap);
+        }else if( value instanceof Relationship ){
+            parseRelation((Relationship)value,relationInfoMap);
+        }
+    }
+    private static void transafeData(String key,Object value,LinkedHashMap<String,Object> kwd_map){
+        Map<Long, NodeInfo> nodeInfoMap = new HashMap<>();
+        Map<Long, RelationInfo> relationInfoMap = new HashMap<>();
+        if( value instanceof HashMap){
+            Map<String,Object> map = ((HashMap) value);
+            if( map.containsKey(_LABELS) ){
+                parseNode(map,nodeInfoMap);
+                nodeInfoMap.forEach((k,v)->{
+                    kwd_map.put(key, JSON.toJSON(v) );
+                });
+            }else if( map.containsKey(_TYPE) ){
+                parseRelation(map,relationInfoMap);
+                relationInfoMap.forEach((k,v)->{
+                    kwd_map.put(key, JSON.toJSON(v) );
+                });
+            }else{
+                kwd_map.put(key,value);
+            }
+        }else if( value instanceof ArrayList){
+            List<Object> list = (ArrayList<Object>) value;
+            List<Object> new_list = new ArrayList<>();
+            list.forEach(s->{
+                LinkedHashMap<String,Object> kwd_map_child = new LinkedHashMap<>();
+                transafeData(key,s,kwd_map_child);
+                new_list.add(kwd_map_child.get(key));
+            });
+            kwd_map.put(key,new_list);
+        }else if( value instanceof Node ){
+            parseNode((Node)value,nodeInfoMap);
+            nodeInfoMap.forEach((k,v)->{
+                kwd_map.put(key, JSON.toJSON(v) );
+            });
+        }else if( value instanceof Relationship ){
+            parseRelation((Relationship)value,relationInfoMap);
+            relationInfoMap.forEach((k,v)->{
+                kwd_map.put(key, JSON.toJSON(v) );
+            });
+        }else {
+            kwd_map.put(key,value);
         }
     }
 
-    private static void parseRelation(Relationship relationship,Map<Long,RelationInfo> relationInfoMap){
-        if( relationInfoMap.containsKey(relationship.id()) ){
-            relationInfoMap.get(relationship.id()).
-                    setId(relationship.id()).
-                    setStartNodeId(relationship.startNodeId()).
-                    setEndNodeId(relationship.endNodeId()).
-                    setType(relationship.type()).setParameters(relationship.asMap()).
-                    set_uuId(relationship.asMap().containsKey(_UUID) ?relationship.asMap().get(_UUID) : NULL );
-        }else{
-            relationInfoMap.put(relationship.id(),
-                    new RelationInfo().
-                            setId(relationship.id()).
-                            setStartNodeId(relationship.startNodeId()).
-                            setEndNodeId(relationship.endNodeId()).
-                            setType(relationship.type()).setParameters(relationship.asMap()).
-                            set_uuId(relationship.asMap().containsKey(_UUID) ?relationship.asMap().get(_UUID) : NULL )
-            );
-        }
-
-    }
 }

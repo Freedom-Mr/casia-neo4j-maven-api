@@ -15,21 +15,21 @@ import java.util.Map;
  * Created by casia.wzy on 2020/5/27
  * Email: zhiyou_wang@foxmail.com
  */
-public class BuildNode extends BuildRelation {
-    public static String node(){
+public class BuildNode extends AddBlank {
+    public String node(){
         StringBuffer sb_node = new StringBuffer();
         sb_node.append(BLANK).append(LEFT_PARENTHESES).append(RIGHT_PARENTHESES).append(BLANK);
         return sb_node.toString();
     }
-    public static String node(String asKey){
+    public String node(String asKey){
         StringBuffer sb_node = new StringBuffer();
         sb_node.append(BLANK).append(LEFT_PARENTHESES).append(asKey).append(RIGHT_PARENTHESES).append(BLANK);
         return sb_node.toString();
     }
-    public static String node(String asKey, List<String> labels){
+    public String node(String asKey, List<String> labels){
         return node(asKey, labels,null);
     }
-    public static String node(String asKey, List<String> labels, Map<String,Object> parms){
+    public String node(String asKey, List<String> labels, Map<String,Object> parms){
         StringBuffer sb_node = new StringBuffer();
         sb_node.append(BLANK).append(LEFT_PARENTHESES).append(asKey);
         if( Validator.check(labels) ){
@@ -45,7 +45,7 @@ public class BuildNode extends BuildRelation {
         sb_node.append(RIGHT_PARENTHESES);
         return sb_node.toString();
     }
-    public static String node(String asKey,List<String> labels,Object _uuid){
+    public String node(String asKey,List<String> labels,Object _uuid){
         StringBuffer sb_node = new StringBuffer();
         sb_node.append(BLANK).append(LEFT_PARENTHESES).append(asKey);
         if( Validator.check(labels) ){
@@ -56,6 +56,12 @@ public class BuildNode extends BuildRelation {
         }
         sb_node.append(RIGHT_PARENTHESES);
         return sb_node.toString();
+    }
+
+    public String node_full_text(String indexName,String queryString){
+       return s().append(CALL).append(BLANK).append(DB).append(DOT).append(INDEX).append(DOT).append(FULLTEXT).append(DOT).append(QUERYNODES).
+               append(LEFT_PARENTHESES).append(SINGLE_QUOTE).append(indexName).append(SINGLE_QUOTE).append(COMMA).
+               append(SINGLE_QUOTE).append(queryString).append(SINGLE_QUOTE).append(RIGHT_PARENTHESES).append(addBlank(YIELD)).append("node").toString();
     }
 
 

@@ -1,17 +1,15 @@
 package casia.isiteam.api.neo4j.datasource.dbdao;
 
 import casia.isiteam.api.neo4j.common.entity.result.GraphResult;
-import casia.isiteam.api.neo4j.common.entity.result.NodeInfo;
-import casia.isiteam.api.neo4j.common.entity.result.RelationInfo;
 import casia.isiteam.api.neo4j.datasource.Neo4jDbSource;
 import casia.isiteam.api.toolutil.Validator;
 import org.neo4j.driver.v1.*;
-import org.neo4j.driver.v1.types.Node;
-import org.neo4j.driver.v1.types.Path;
-import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.*;
 
 import static org.neo4j.driver.v1.Values.parameters;
@@ -31,8 +29,8 @@ public class Neo4jCommonDb extends Neo4jDbSource {
      * @param cqls
      * @return
      */
-    public boolean executeWriteCql(List<String> cqls) {
-        Driver driver = neoDriver();
+    protected boolean executeWriteCql(List<String> cqls) {
+        Driver driver = Ne4Driver();
         Session session = null;
         try {
             session = driver.session(AccessMode.WRITE);
@@ -56,15 +54,19 @@ public class Neo4jCommonDb extends Neo4jDbSource {
             close(session, null);
         }
     }
-    public boolean executeWriteCql(String cql,Object ... keysAndValues) {
-        Driver driver = neoDriver();
+    protected boolean executeWriteCql(String cql,Object ... keysAndValues) {
+        Driver driver = Ne4Driver();
         Session session = null;
         try {
             session = driver.session(AccessMode.WRITE);
             while (true){
                 try {
                     Transaction ts = session.beginTransaction();
-                    ts.run(cql,parameters(keysAndValues));
+                    if(Validator.check(keysAndValues)){
+                        ts.run(cql,parameters(keysAndValues));
+                    }else{
+                        ts.run(cql);
+                    }
                     ts.success();
                     break;
                 }catch (Exception e){
@@ -87,8 +89,8 @@ public class Neo4jCommonDb extends Neo4jDbSource {
      * @param cql
      * @return
      */
-    public GraphResult executeWriteCql( String cql) {
-        Driver driver = neoDriver();
+    protected GraphResult executeWriteCql( String cql) {
+        Driver driver = Ne4Driver();
         Session session = null;
         try {
             logger.debug("cql: {}",cql);
@@ -109,8 +111,8 @@ public class Neo4jCommonDb extends Neo4jDbSource {
      * @param cql
      * @return
      */
-    public GraphResult executeReadCql( String cql) {
-        Driver driver = neoDriver();
+    protected GraphResult executeReadCql( String cql) {
+        Driver driver = Ne4Driver();
         Session session = null;
         try {
             logger.debug("cql: {}",cql);
@@ -122,6 +124,128 @@ public class Neo4jCommonDb extends Neo4jDbSource {
             return new GraphResult();
         } finally {
             close(session, null);
+        }
+    }
+
+    /**************************************************** druid ************************************************************/
+    /**
+     * 执行cql
+     * @param cql
+     * @return
+     */
+    protected boolean executeDruidWriteCql(String cql) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            logger.debug("cql: {}",cql);
+            connection =NeoDriver().getConnection();
+            preparedStatement = connection.prepareStatement(cql);
+            int result = preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("run cql error，model:WRITE，cql:{}，error:{}",cql,e.getMessage());
+            return false;
+        } finally {
+            close(connection, preparedStatement,null);
+        }
+        return true;
+    }
+    /**
+     * 执行cql
+     * @param cql
+     * @return
+     */
+    protected boolean executeDruidWriteCql(String cql,Object ... values) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            logger.debug("cql: {}",cql);
+            connection =NeoDriver().getConnection();
+            preparedStatement = connection.prepareStatement(cql);
+            if( Validator.check(values) ){
+                for(int i=0;i<values.length;i++){
+                    preparedStatement.setObject(i+1,values[i]);
+                }
+            }
+            int result = preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("run cql error，model:WRITE，cql:{}，error:{}",cql,e.getMessage());
+            return false;
+        } finally {
+            close(connection, preparedStatement,null);
+        }
+        return true;
+    }
+    /**
+     * 批量 操作 cql
+     * @param cql
+     * @return
+     */
+    protected boolean executeDruidBatchWriteCql(String cql,List<Object[]> values) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            logger.debug("cql: {}",cql);
+            connection =NeoDriver().getConnection();
+            preparedStatement = connection.prepareStatement(cql);
+            if( Validator.check(values) ){
+                for(Object[] s:values){
+                    for(int i=0;i<s.length;i++){
+                        preparedStatement.setObject(i+1,s[i]);
+                    }
+                    preparedStatement.addBatch();
+                }
+            }
+           preparedStatement.executeBatch();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("run cql error，model:WRITE，cql:{}，error:{}",cql,e.getMessage());
+            return false;
+        } finally {
+            close(connection, preparedStatement,null);
+        }
+        return true;
+    }
+    protected GraphResult executeDruidReadCql(boolean openTableData, String cql) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet result = null;
+        try {
+            logger.debug("cql: {}",cql);
+            connection =NeoDriver().getConnection();
+            preparedStatement = connection.prepareStatement(cql);
+            result = preparedStatement.executeQuery();
+            return ParseResult.parseResult(result,openTableData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("run cql error，model:READ，cql:{}，error:{}",cql,e.getMessage());
+            return new GraphResult();
+        } finally {
+            close(connection, preparedStatement,result);
+        }
+    }
+    protected GraphResult executeDruidReadCql(boolean openTableData, String cql,Object ... values) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet result = null;
+        try {
+            logger.debug("cql: {}",cql);
+            connection =NeoDriver().getConnection();
+            preparedStatement = connection.prepareStatement(cql);
+            if( Validator.check(values) ){
+                for(int i=0;i<values.length;i++){
+                    preparedStatement.setObject(i+1,values[i]);
+                }
+            }
+            result = preparedStatement.executeQuery();
+            return ParseResult.parseResult(result,openTableData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("run cql error，model:READ，cql:{}，error:{}",cql,e.getMessage());
+            return new GraphResult();
+        } finally {
+            close(connection, preparedStatement,result);
         }
     }
 }

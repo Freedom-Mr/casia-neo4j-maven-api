@@ -1,68 +1,75 @@
-package casia.isiteam.api.neo4j.util;
+package casia.isiteam.api.neo4j.util.build;
 
-import casia.isiteam.api.neo4j.common.entity.result.NodeInfo;
 import casia.isiteam.api.neo4j.common.entity.model.RelationshipInfo;
+import casia.isiteam.api.neo4j.common.entity.result.NodeInfo;
 import casia.isiteam.api.neo4j.common.enums.CreateType;
-import casia.isiteam.api.neo4j.util.build.BuildNode;
+import casia.isiteam.api.neo4j.util.TypeUtil;
 import casia.isiteam.api.toolutil.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
- * ClassName: CqlBuilder
+ * ClassName: BuildCql
  * Description: unknown
  * <p>
- * Created by casia.wzy on 2020/5/25
+ * Created by casia.wzy on 2020/6/4
  * Email: zhiyou_wang@foxmail.com
  */
-public class CqlBuilder extends BuildNode {
-    public static String asKey(){
-        return A+UUID.randomUUID().toString().replaceAll(CROSS,NONE);
-    }
+public class BuildCql extends BuildReturn {
 
-    public static String cqlB(String ... keywords){
-        StringBuffer sb = new StringBuffer();
-        for(String keyword:keywords){
-            sb.append(keyword).append(BLANK);
+    protected String node_1 = " (%s) ";
+    protected String node_2 = " (%s:%s) ";
+    protected String node_3 = " (%s:%s{_uuId:%s}) ";
+
+    protected String nodeRelation_1 = " ()-[]-() ";
+    protected String nodeRelation_2 = " ()-[%s]-() ";
+
+    protected String id_1 = " id(%s)=%d ";
+
+    protected String apoc_1 = " apoc.path.subgraphAll(%s, {maxLevel:%d}) ";
+
+
+    protected String symbols(String symbol,String ... fields){
+        StringBuffer result = s();
+        for(String field:fields){
+            result.append(result.length() == 0? field : symbol+field);
         }
-        return sb.toString();
+        return result.toString();
     }
-
-
+    protected String symbols(String symbol,List<String> fields){
+        StringBuffer result = s();
+        for(String field:fields){
+            result.append(result.length() == 0? field : symbol+field);
+        }
+        return result.toString();
+    }
     /**
      * build cql info by create node
      * @param model
      * @param nodeInfo
      * @return
      */
-    public static List<String> createNodeBuilder(CreateType model,NodeInfo ... nodeInfo){
+    public List<String> buildCreateNodeCql(CreateType model, NodeInfo... nodeInfo){
         if( !Validator.check(model) || !Validator.check(nodeInfo) ){
             return new ArrayList<>();
         }
-
         List<String> cqls = new ArrayList<>();
         for(NodeInfo node:nodeInfo){
-            if( !Validator.check(node.getLabels()) ){
-                continue;
-            }
-            String asKey = asKey();
-
-            String cql_node = node(asKey,node.getLabels(),node.get_uuId());
-            String cql_set = buildSet(asKey,node.getParameters());
-
+            String cql_node = node(A,node.getLabels(),node.get_uuId());
+            String cql_set = set(A,node.getParameters());
             cqls.add(model.name()+cql_node+cql_set);
         }
         return cqls;
     }
+
     /**
      * build cql info by create relation
      * @param model
      * @param relationInfos
      * @return
      */
-    public static List<String> createRelationBuilder(CreateType model, RelationshipInfo ... relationInfos){
+    public List<String> buildCreateNodeRelationByNodeId(CreateType model, RelationshipInfo ... relationInfos){
         if( !Validator.check(model) || !Validator.check(relationInfos) ){
             return new ArrayList<>();
         }
@@ -72,7 +79,7 @@ public class CqlBuilder extends BuildNode {
             if( !Validator.check(relationInfo.getStartNodeInfo())  || !Validator.check(relationInfo.getEndNodeInfo()) ){
                 continue;
             }
-            String cql = buildRelation(model,relationInfo,3);
+            String cql = buildCreateNodeRelationCql(model,relationInfo,1);
             if( Validator.check(cql) ){
                 cqls.add(cql);
             };
@@ -85,7 +92,7 @@ public class CqlBuilder extends BuildNode {
      * @param relationInfos
      * @return
      */
-    public static List<String> createRelationByNodeIdBuilder(CreateType model, RelationshipInfo ... relationInfos){
+    public List<String> buildCreateNodeRelationCql(CreateType model, RelationshipInfo... relationInfos){
         if( !Validator.check(model) || !Validator.check(relationInfos) ){
             return new ArrayList<>();
         }
@@ -95,7 +102,7 @@ public class CqlBuilder extends BuildNode {
             if( !Validator.check(relationInfo.getStartNodeInfo())  || !Validator.check(relationInfo.getEndNodeInfo()) ){
                 continue;
             }
-            String cql = buildRelation(model,relationInfo,1);
+            String cql = buildCreateNodeRelationCql(model,relationInfo,relationInfo.getStartNodeInfo().getId()>-1 && relationInfo.getEndNodeInfo().getId()>-1 ? 1:3);
             if( Validator.check(cql) ){
                 cqls.add(cql);
             };
@@ -108,7 +115,7 @@ public class CqlBuilder extends BuildNode {
      * @param relationInfos
      * @return
      */
-    public static List<String> createRelationByNodeUuIdBuilder(CreateType model, RelationshipInfo ... relationInfos){
+    public List<String> buildCreateNodeRelationByNodeUuIdCql(CreateType model, RelationshipInfo ... relationInfos){
         if( !Validator.check(model) || !Validator.check(relationInfos) ){
             return new ArrayList<>();
         }
@@ -118,47 +125,10 @@ public class CqlBuilder extends BuildNode {
             if( !Validator.check(relationInfo.getStartNodeInfo())  || !Validator.check(relationInfo.getEndNodeInfo()) ){
                 continue;
             }
-            cqls.add(buildRelation(model,relationInfo,2));
+            cqls.add(buildCreateNodeRelationCql(model,relationInfo,2));
         }
         return cqls;
     }
-
-    /**
-     * build new label cql info by create node
-     * @param nodeInfo
-     * @return
-     */
-    public static List<String> addLabelByNodeIdBuilder(NodeInfo ... nodeInfo){
-        if( !Validator.check(nodeInfo) ){
-            return new ArrayList<>();
-        }
-
-        List<String> cqls = new ArrayList<>();
-        for(NodeInfo node:nodeInfo){
-            if( !Validator.check(node.getId()) || !Validator.check(node.getLabels()) ){
-                continue;
-            }
-
-            String asKey = asKey();
-            StringBuffer sb = new StringBuffer();
-            sb.append(addBlank(MATCH)).append(LEFT_PARENTHESES).append(asKey).append(RIGHT_PARENTHESES).append(addBlank(WHERE)).
-                    append(ID).append(LEFT_PARENTHESES).append(asKey).append(RIGHT_PARENTHESES).append(EQUAL).append(node.getId())
-                    .append(addBlank(SET))
-                    .append(asKey);
-            node.getLabels().forEach(s->{
-                sb.append(COLON).append(s);
-            });
-            cqls.add(sb.toString());
-        }
-        return cqls;
-    }
-
-
-
-
-
-
-
 
     /**
      * build relation
@@ -167,18 +137,18 @@ public class CqlBuilder extends BuildNode {
      * @param type 1-id, 2-uuId ,3-allParms
      * @return
      */
-    private static String buildRelation(CreateType model,RelationshipInfo relationInfo,int type){
+    private String buildCreateNodeRelationCql(CreateType model,RelationshipInfo relationInfo,int type){
         /************ START NODE **************/
-        String start_asKey = asKey();
+        String start_asKey = A;
         StringBuffer satrt_node = new StringBuffer();
 
         /************ END NODE **************/
-        String end_asKey = asKey();
+        String end_asKey = B;
         StringBuffer end_node = new StringBuffer();
 
         // 通过ID
         if( type == 1 ){
-            if( !Validator.check(relationInfo.getStartNodeInfo().getId()) || !Validator.check(relationInfo.getEndNodeInfo().getId()) ){
+            if( relationInfo.getStartNodeInfo().getId() <-1 || relationInfo.getEndNodeInfo().getId()<-1 ){
                 return NONE;
             }
             satrt_node.append(addBlank(MATCH)).append( node(start_asKey,relationInfo.getStartNodeInfo().getLabels(),null) ).append( where(start_asKey, NONE ,relationInfo.getStartNodeInfo().getId()) );
@@ -215,12 +185,12 @@ public class CqlBuilder extends BuildNode {
         sb_relation.append(addBlank(model.name()))
                 .append(LEFT_PARENTHESES).append(start_asKey).append(RIGHT_PARENTHESES)
                 .append(CROSS)
-                .append( buildRelationNode(line_asKey,relationInfo.getType(),relationInfo.get_uuId()) )
+                .append( buildRelation(line_asKey,relationInfo.getType(),relationInfo.get_uuId()) )
                 .append(relationInfo.getDirection() ? CROSS_D : CROSS )
                 .append(LEFT_PARENTHESES).append(end_asKey).append(RIGHT_PARENTHESES);
 
         if( Validator.check(relationInfo.getParameters()) ){
-            sb_relation.append( buildSet(line_asKey,relationInfo.getParameters()) );
+            sb_relation.append( set(line_asKey,relationInfo.getParameters()) );
         }
         return NONE + satrt_node + end_node +sb_relation;
     }
@@ -232,7 +202,7 @@ public class CqlBuilder extends BuildNode {
      * @param _uuid
      * @return
      */
-    private static String buildRelationNode(String asKey,String label,Object _uuid ){
+    private String buildRelation(String asKey,String label,Object _uuid ){
         StringBuffer sb_node = new StringBuffer();
         sb_node.append(LEFT_BRACKETS).append(asKey);
         if( Validator.check(label) ){
@@ -244,7 +214,4 @@ public class CqlBuilder extends BuildNode {
         sb_node.append(RIGHT_BRACKETS);
         return sb_node.toString();
     }
-
-
-
 }

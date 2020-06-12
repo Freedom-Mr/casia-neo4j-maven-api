@@ -3,16 +3,22 @@ package casia.isiteam.api.neo4j.datasource;
 import casia.isiteam.api.neo4j.common.entity.vo._Entity_Driver;
 import casia.isiteam.api.neo4j.common.manage.parms.BasicParms;
 import casia.isiteam.api.neo4j.common.manage.status.Neo4jDriverStatus;
+import casia.isiteam.api.neo4j.datasource.manage.DataPoolManage;
 import casia.isiteam.api.neo4j.util.LogsUtil;
 import casia.isiteam.api.toolutil.Validator;
 import casia.isiteam.api.toolutil.regex.CasiaRegexUtil;
-import casia.isiteam.api.toolutil.secretKey.base.CasiaBaseUtil;
+import com.alibaba.druid.pool.DruidDataSource;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.neo4j.driver.v1.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -49,18 +55,46 @@ public class Neo4jDbSource extends Neo4jDriverStatus {
                 logger.warn(LogsUtil.compositionLogEmpty(APPLICATION));
             }
         }finally {
-            extractInfos.forEach((k,v)->initEsDb(k,v));
+            extractInfos.forEach((k,v)->{if(!_dataPool.containsKey(k)){_dataPool.put(k,DataPoolManage.initDataPool(v));}});
         }
     }
-    private static void initEsDb(String dbName,Map<String,Object> parms){
-        synchronized (Neo4jDbSource.dbSource){
-            if( !Neo4jDbSource.dbSource.containsKey(String.valueOf(dbName)) ){
-                Neo4jDbSource.dbSource.put(dbName,new _Entity_Driver(dbName,
-                        parms.containsKey(BasicParms.USERNAME)? String.valueOf( parms.get(BasicParms.USERNAME) ) : null,
-                        parms.containsKey(BasicParms.PASSWORD)? String.valueOf( parms.get(BasicParms.PASSWORD) ) : null,
-                        parms.containsKey(BasicParms.BLOT)? String.valueOf( parms.get(BasicParms.BLOT) ).split(COMMA+LINE+SEMICOLON) : null
-                ));
+    protected DruidDataSource NeoDriver(){
+        if( Validator.check(dbinfo) ){
+            if( Validator.check(dbinfo.getDbname()) ){
+                return _dataPool.get(dbinfo.getDbname());
+            }else{if( _dataPool.containsKey(dbinfo.hexMd5()) ){ return _dataPool.get(dbinfo.hexMd5());}else{ synchronized (_dataPool){_dataPool.put(dbinfo.hexMd5(),DataPoolManage.initDataPool(dbinfo));}return _dataPool.get(dbinfo.hexMd5()); }
             }
+        }else{
+            logger.error(LogsUtil.compositionLogEmpty("The neo4j dbsource") );
+            return null;
+        }
+    }
+    protected Driver Ne4Driver(){
+        Driver driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "root"));
+       return driver;
+    }
+    static{configure();}
+    protected void close(Session session,Driver driver){
+        if( Validator.check(session) ){
+            session.close();
+        }
+        if(Validator.check(driver)){
+            driver.close();
+        }
+    }
+    protected void close(Connection connection,PreparedStatement preparedStatement,ResultSet result){
+        try {
+            if( Validator.check(result) ){
+                result.close();
+            }
+            if(Validator.check(preparedStatement)){
+                preparedStatement.close();
+            }
+            if(Validator.check(connection)){
+                connection.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
     private static void extraction(Object key,Object value,Map<String,Map<String,Object>> extractInfos){
@@ -77,47 +111,6 @@ public class Neo4jDbSource extends Neo4jDriverStatus {
             };
         }catch (Exception E){
             logger.error(E.getMessage());
-        }
-    }
-    protected static synchronized _Entity_Driver getDb(String driverName){
-        return Neo4jDbSource.dbSource.containsKey(driverName)? Neo4jDbSource.dbSource.get(driverName) : new _Entity_Driver("");
-    }
-    protected Driver neoDriver(){
-        if( Validator.check(dbinfo) ){
-            _Entity_Driver driverInfo = Validator.check(dbinfo.getDbname()) ? getDb(dbinfo.getDbname()) : dbinfo;
-
-            String base = CasiaBaseUtil.encrypt64(driverInfo.getDbname()+driverInfo.getBolts()+driverInfo.getUsername()+driverInfo.getPassword());
-            if( _drivers.containsKey(base) ){
-                return _drivers.get(base);
-            }
-
-            if( !Validator.check(driverInfo) || !Validator.check(driverInfo.getBolts()) ){
-                logger.error(LogsUtil.compositionLogEmpty("The neo4j dbsource blot") );
-                return null;
-            }
-            if( driverInfo.getBolts().size() >1 ){
-                Config config = Config.builder()
-                        .withResolver( address -> new HashSet<>( driverInfo.getBolts() ) )
-                        .build();
-                _drivers.put(base, Validator.check( driverInfo.getUsername() ) ? GraphDatabase.driver( VIRTUALURI, AuthTokens.basic( driverInfo.getUsername(), driverInfo.getPassword() ),
-                        config ) : GraphDatabase.driver( VIRTUALURI, config) );
-            }else{
-                _drivers.put(base, Validator.check( driverInfo.getUsername() ) ?  GraphDatabase.driver( driverInfo.getBolt() , AuthTokens.basic( driverInfo.getUsername(), driverInfo.getPassword() ) ):
-                        GraphDatabase.driver( VIRTUALURI ) );
-            }
-            return _drivers.get(base);
-        }else{
-            logger.error(LogsUtil.compositionLogEmpty("The neo4j dbsource") );
-            return null;
-        }
-    }
-    static{configure();}
-    protected void close(Session session,Driver driver){
-        if( Validator.check(session) ){
-            session.close();
-        }
-        if(Validator.check(driver)){
-            driver.close();
         }
     }
 }

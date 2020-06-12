@@ -37,4 +37,8 @@ public class TreeBuider {
     public JSONArray queryAllJsonTreeByLables(String ... labels) {
         return treeApi.searchAllJsonTreeByLables(Arrays.asList(labels));
     }
+
+    public JSONArray queryAllJsonTreeAndCountByLables(String ... labels) {
+        return treeApi.searchAllJsonTreeAndCountByLables(Arrays.asList(labels));
+    }
 }

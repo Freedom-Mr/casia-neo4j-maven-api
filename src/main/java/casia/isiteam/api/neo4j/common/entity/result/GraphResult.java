@@ -1,5 +1,7 @@
 package casia.isiteam.api.neo4j.common.entity.result;
 
+import casia.isiteam.api.toolutil.Validator;
+
 import java.util.*;
 
 /**
@@ -12,7 +14,7 @@ import java.util.*;
 public class GraphResult {
     private List<NodeInfo> nodeInfos = new ArrayList<>();
     private List<RelationInfo> relationInfos = new ArrayList<>();
-    private List<Object[]> kwds = new ArrayList<>();
+    private List<LinkedHashMap<String,Object>> kwds = new ArrayList<>();
 
     public GraphResult() {
 
@@ -79,29 +81,15 @@ public class GraphResult {
         return this;
     }
 
-    public GraphResult(List<Object[]> kwd) {
-        kwd.stream().filter(s->!this.kwds.contains(s)).forEach(s->{
-            this.kwds.add(s);
-        });
-    }
-    public GraphResult(Object[] ... kwd) {
-        for(Object[] info : kwd){
-            if(!this.kwds.contains(info) ){
-                this.kwds.add(info);
-            }
+    public GraphResult(List<LinkedHashMap<String,Object>> kwd) {
+        if(Validator.check(kwd)){
+            this.kwds.addAll(kwd);
         }
     }
-    public GraphResult setKwds(List<Object[]> kwd) {
-        kwd.stream().filter(s->!this.kwds.contains(s)).forEach(s->{
-            this.kwds.add(s);
-        });
-        return this;
-    }
-    public GraphResult setKwds(Object[] ... kwd) {
-        for(Object[] info : kwd){
-            if(!this.kwds.contains(info) ){
-                this.kwds.add(info);
-            }
+
+    public GraphResult setKwds(List<LinkedHashMap<String,Object>> kwd) {
+        if(Validator.check(kwd)){
+            this.kwds.addAll(kwd);
         }
         return this;
     }
@@ -112,7 +100,7 @@ public class GraphResult {
         return relationInfos;
     }
 
-    public List<Object[]> getKwds() {
+    public List<LinkedHashMap<String,Object>> getKwds() {
         return kwds;
     }
 

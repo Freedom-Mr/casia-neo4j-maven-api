@@ -9,6 +9,11 @@ package casia.isiteam.api.neo4j.common.manage.parms;
  */
 public class Neo4jParms {
     protected final static String A = "a";
+    protected final static String B = "b";
+    protected final static String C = "c";
+    protected final static String D = "d";
+    protected final static String R = "r";
+    protected final static String P = "p";
     protected final static String _ID_ = "<id>";
 
     public final static String _UUID = "_uuId";
@@ -18,14 +23,24 @@ public class Neo4jParms {
     protected final static String NEXT = "next";
     protected final static String PARAMETERS = "parameters";
 
+    /**
+     * path nums
+     */
+    protected final static String PATH_1 = "*0..1";
+
 
     protected final static String ID = "id";
+    protected final static String _ID = "_id";
     protected final static String DB = "db";
     protected final static String CALL = "call";
     protected final static String SET = "set";
+    protected final static String NODES = "nodes";
+    protected final static String RELATIONSHIPS = "relationships";
     protected final static String UNWIND = "unwind";
     protected final static String OPTIONAL = "optional";
     protected final static String WITH = "with";
+    protected final static String AND = "and";
+    protected final static String OR = "or";
     protected final static String WHERE = "where";
     protected final static String MAX = "max";
     protected final static String AVG = "avg";
@@ -39,10 +54,16 @@ public class Neo4jParms {
     protected final static String CONSTRAINT = "constraint";
     protected final static String MERGE = "merge";
     protected final static String INDEX = "index";
+    protected final static String FULLTEXT = "fulltext";
+    protected final static String QUERYNODES = "queryNodes";
+    protected final static String QUERYRELATIONSHIPS = "queryRelationships";
+    protected final static String YIELD = "yield";
     protected final static String DROP = "drop";
     protected final static String ON = "on";
     protected final static String TYPE = "type";
+    protected final static String _TYPE = "_type";
     protected final static String AS = "as";
+    protected final static String TOTAL = "total";
     protected final static String DISTINCT = "distinct";
     protected final static String SKIP = "skip";
     protected final static String LIMIT = "limit";
@@ -52,8 +73,14 @@ public class Neo4jParms {
     protected final static String MATCH = "match";
     protected final static String IN = "in";
     protected final static String LABELS = "labels";
+    protected final static String _LABELS = "_labels";
     protected final static String RELATIONSHIPTYPES = "relationshipTypes";
     protected final static String NOT = "not";
+    protected final static String DELETE = "delete";
+    protected final static String _STARID = "_startId";
+    protected final static String _ENDID = "_endId";
+    protected final static String REMOVE = "remove";
+    protected final static String ALLSHORTESTPATHS = "allshortestPaths";
 
     /**
      * return data type

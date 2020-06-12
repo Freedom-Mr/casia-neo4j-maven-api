@@ -16,7 +16,7 @@ public class NodeInfo {
     /**
      * node id
      */
-    private long id;
+    private long id = -1;
     /**
      * node uniq id
      */
@@ -120,5 +120,12 @@ public class NodeInfo {
         }
         return this;
     }
-
+    public NodeInfo setParameters(String key,Object value) {
+        if( Validator.check(key) ){
+            if( !this.parameters.containsKey(key) ){
+                this.parameters.put(key,value);
+            }
+        }
+        return this;
+    }
 }

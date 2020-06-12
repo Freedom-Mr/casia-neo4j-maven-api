@@ -13,7 +13,7 @@ import casia.isiteam.api.toolutil.Validator;
  */
 public class TypeUtil extends BasicParms {
     public static Object LevelRecognition(MatchLevel matchLevel,Object parm){
-        Object pm = typeRecognition(EscapUtil.repalceChars(parm));
+        Object pm = typeRecognition(parm);
         if( !Validator.check(matchLevel) || MatchLevel.Term.getLevel().equals( matchLevel.getLevel()) ){
             return EQUAL+pm;
         }else if( MatchLevel.Prefix.getLevel().equals( matchLevel.getLevel()) ||
@@ -30,7 +30,7 @@ public class TypeUtil extends BasicParms {
 
     public static Object typeRecognition(Object parm){
         if( parm instanceof String){
-            return "'"+parm+"'";
+            return "'"+EscapUtil.repalceChars(parm)+"'";
         }else{
             return parm;
         }

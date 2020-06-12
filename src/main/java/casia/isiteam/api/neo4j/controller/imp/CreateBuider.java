@@ -7,6 +7,7 @@ import casia.isiteam.api.neo4j.common.entity.vo._Entity_Driver;
 import casia.isiteam.api.neo4j.common.enums.CreateType;
 import casia.isiteam.api.neo4j.operation.interfaces.Neo4jOperationApi;
 import casia.isiteam.api.neo4j.router.ApiRouter;
+import casia.isiteam.api.neo4j.util.LogsUtil;
 import casia.isiteam.api.toolutil.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +31,14 @@ public class CreateBuider {
         createApi = ApiRouter.getCreateRouter(entity_driver);
     }
 
-    public GraphResult create(String cql){
+    public boolean create(String cql){
         return createApi.create(cql);
     }
-    public boolean create(String cql,Object ... keysAndValues){
-        return createApi.create(cql,keysAndValues);
+    public boolean create(String cql,Object ... values){
+        return createApi.create(cql,values);
+    }
+    public boolean create(String cql,List<Object[]> values){
+        return createApi.create(cql,values);
     }
     /**
      *
@@ -52,18 +56,23 @@ public class CreateBuider {
      *create relation
      * @return
      */
-    public boolean createRelation(CreateType createType , RelationshipInfo... relationInfos){
+    public boolean createRelationByNodeInfo(CreateType createType , RelationshipInfo... relationInfos){
         if( !Validator.check(relationInfos) ){return true;}
-        return createApi.createRelationBuilder(createType,relationInfos);
+        return createApi.createRelationByNodeInfoBuilder(createType,relationInfos);
     }
-    public boolean createRelation(CreateType createType , List<RelationshipInfo> relationInfos){
+    public boolean createRelationByNodeInfo(CreateType createType , List<RelationshipInfo> relationInfos){
         if( !Validator.check(relationInfos) ){return true;}
-        return createApi.createRelationBuilder(createType,relationInfos.toArray(new RelationshipInfo[relationInfos.size()]) );
+        return createApi.createRelationByNodeInfoBuilder(createType,relationInfos.toArray(new RelationshipInfo[relationInfos.size()]) );
     }
     /**
      *
      * @return
      */
+    public boolean createRelationByNodeId(CreateType createType , long start_node_id,long end_node_id,String type){
+        if( !Validator.check(type) ){logger.warn(LogsUtil.compositionLogEmpty(" relation type "));return true;
+        }
+        return createApi.createRelationByNodeIdBuilder(createType,new RelationshipInfo(new NodeInfo().setId(start_node_id),new NodeInfo().setId(end_node_id),type));
+    }
     public boolean createRelationByNodeId(CreateType createType , RelationshipInfo... relationInfos){
         if( !Validator.check(relationInfos) ){return true;}
         return createApi.createRelationByNodeIdBuilder(createType,relationInfos);
@@ -83,5 +92,14 @@ public class CreateBuider {
     public boolean createRelationByNodeUuId(CreateType createType , List<RelationshipInfo> relationInfos){
         if( !Validator.check(relationInfos) ){return true;}
         return createApi.createRelationByNodeUuIdBuilder(createType,relationInfos.toArray(new RelationshipInfo[relationInfos.size()]));
+    }
+
+    public boolean createLabelByNodeId( long _id, List<String> labels){
+        if( !Validator.check(labels) ){return true;}
+        return createApi.addLabelByNodeId(_id,labels);
+    }
+    public boolean createLabelByNodeId( long _id, String ... labels){
+        if( !Validator.check(labels) ){return true;}
+        return createApi.addLabelByNodeId(_id,Arrays.asList(labels));
     }
 }

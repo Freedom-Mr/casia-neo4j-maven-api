@@ -2,6 +2,8 @@ package casia.isiteam.api.neo4j.util.build;
 
 import casia.isiteam.api.neo4j.common.manage.parms.BasicParms;
 
+import java.util.UUID;
+
 /**
  * ClassName: AddBlank
  * Description: unknown
@@ -12,5 +14,15 @@ import casia.isiteam.api.neo4j.common.manage.parms.BasicParms;
 public class AddBlank extends BasicParms {
     public static String addBlank(String key){
         return BLANK+key+BLANK;
+    }
+    public static String addP(String nodeLation){
+        return BLANK+P+EQUAL+nodeLation+BLANK;
+    }
+    protected StringBuffer s(){
+        return new StringBuffer();
+    }
+
+    public String asKey(){
+        return A+ UUID.randomUUID().toString().replaceAll(CROSS,NONE);
     }
 }

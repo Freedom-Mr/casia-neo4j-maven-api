@@ -16,9 +16,21 @@ public class BasicParms extends Neo4jParms{
      */
     protected final static String DBNAME = "dbname";
     protected final static String BLOT = "blot";
+    protected final static String URL = "url";
+    protected final static String JDBC_DRIVER= "org.neo4j.jdbc.Driver";
     protected final static String BOLT_COLON_SLASH = "bolt://";
+    protected final static String JDBC_BOLT_COLON_SLASH = "jdbc:neo4j:bolt://";
     protected final static String USERNAME = "username";
     protected final static String PASSWORD = "password";
+    protected final static String INITIALSIZE = "initialSize";
+    protected final static String MAXACTIVE = "maxActive";
+    protected final static String MINIDLE = "minIdle";
+    protected final static String MAXWAIT = "maxWait";
+    protected final static String VALIDATIONQUERY = "validationQuery";
+    protected final static String TESTONBORROW = "testOnBorrow";
+    protected final static String TESTONRETURN = "testOnReturn";
+    protected final static String TESTWHILEIDLE	 = "testWhileIdle";
+    protected final static String PROPERTY_PREFIX	 = "druid";
 
     /**
      * regex
@@ -32,6 +44,7 @@ public class BasicParms extends Neo4jParms{
     public final static String SLASH_DOT = "\\.";
     public final static String DOT = ".";
     public final static String COMMA = ",";
+    public final static String SINGLE_QUOTE = "'";
     public final static String COLON = ":";
     public final static String SEMICOLON = ";";
     public final static String N = "\n";
@@ -55,5 +68,10 @@ public class BasicParms extends Neo4jParms{
     public final static String RIGHT_BRACES = "}";
     public final static String RIGHT_BRACKETS = "]";
 
+    public final static String RANGE_PATH_1_6 = "*1..6";
+    public final static String RANGE_PATH_1_ = "*1..";
+
     protected final static String VIRTUALURI = "bolt+routing://127.0.0.1:1";
+    protected final static String VALIDATIONQUERYCQL = "match (n) return * limit 1";
+
 }

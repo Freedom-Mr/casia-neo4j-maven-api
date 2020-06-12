@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Class-Path: commons-codec-1.13.jar druid-1.1.22.jar casia-util-1.0.4.j
+ ar slf4j-log4j12-1.7.30.jar fastjson-1.2.62.jar slf4j-api-1.7.30.jar 
+ log4j-1.2.17.jar neo4j-jdbc-driver-3.4.0.jar
+Main-Class: casia.isiteam.api.neo4j.App
+
