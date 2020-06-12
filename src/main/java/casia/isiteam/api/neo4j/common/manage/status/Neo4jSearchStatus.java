@@ -1,6 +1,6 @@
 package casia.isiteam.api.neo4j.common.manage.status;
 
-import casia.isiteam.api.neo4j.util.Builder;
+import casia.isiteam.api.neo4j.util.BuilderUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
  * Created by casia.wzy on 2020/5/26
  * Email: zhiyou_wang@foxmail.com
  */
-public class Neo4jSearchStatus  extends Builder {
+public class Neo4jSearchStatus  extends BuilderUtil {
     protected Long skip = 0L;
     protected Long limit = 25L;
     protected List<String> returnFields = new ArrayList<>();

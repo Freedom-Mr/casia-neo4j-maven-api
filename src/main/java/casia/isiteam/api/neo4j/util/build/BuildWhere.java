@@ -3,9 +3,9 @@ package casia.isiteam.api.neo4j.util.build;
 import casia.isiteam.api.neo4j.common.entity.vo.Attribute;
 import casia.isiteam.api.neo4j.common.enums.ConditionLevel;
 import casia.isiteam.api.neo4j.common.enums.ParameterCombine;
-import casia.isiteam.api.neo4j.util.EscapUtil;
 import casia.isiteam.api.neo4j.util.TypeUtil;
 import casia.isiteam.api.toolutil.Validator;
+import casia.isiteam.api.toolutil.escape.CasiaEscapeUtil;
 import com.alibaba.fastjson.JSONArray;
 
 import java.util.Arrays;
@@ -48,7 +48,7 @@ public class BuildWhere extends BuildSet {
                         append( addBlank(isNot) ).
                         append(asKey).append(DOT).
                         append(k).
-                        append( TypeUtil.typeRecognition(EscapUtil.repalceChars(v)) );
+                        append( TypeUtil.typeRecognition(CasiaEscapeUtil.neo4jEscape(v)) );
             });
         }
         return sb_parm.length()>0 ? addBlank(WHERE)+sb_parm : NONE;
@@ -86,7 +86,7 @@ public class BuildWhere extends BuildSet {
                         append(asKey).append(DOT).
                         append(k).
                         append( EQUAL ).
-                        append( TypeUtil.typeRecognition( EscapUtil.repalceChars(v) ) );
+                        append( TypeUtil.typeRecognition(CasiaEscapeUtil.neo4jEscape(v) ) );
             });
         }
         return sb_parm.length()>0 ? addBlank(WHERE)+sb_parm : NONE;

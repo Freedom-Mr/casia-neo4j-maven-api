@@ -138,7 +138,7 @@ public class CasiaNeoTest extends TestCase {
 
 //        GraphResult graphResult = casiaNeo4j.query().queryRelation();
 //        GraphResult graphResult = casiaNeo4j.query().setCloseTableData().queryRelationByType(Arrays.asList("发射任务"));
-        GraphResult graphResult = casiaNeo4j.query().queryRelationByIdIn(12L);
+//        GraphResult graphResult = casiaNeo4j.query().queryRelationByIdIn(12L);
 //        GraphResult graphResult = casiaNeo4j.query().queryRelationByStartNode(new NodeInfo().setId(172));
 //        GraphResult graphResult = casiaNeo4j.query().queryRelationByNodeId(19,4);
 //        GraphResult graphResult = casiaNeo4j.query().queryRelationByStartNodeId(172);
@@ -152,7 +152,7 @@ public class CasiaNeoTest extends TestCase {
 //        GraphResult graphResult = casiaNeo4j.query().queryRelationByStartNodeIdAndTypeAndEndNodeId(172L,null,2262L);
 //        GraphResult graphResult = casiaNeo4j.query().queryRelationByStartNodeIdInAndTypeAndEndNodeIdIn(Arrays.asList(172L),null,Arrays.asList(2262L));
 
-//        GraphResult graphResult = casiaNeo4j.query(). queryRelationOnFuzzyByNodeIds(Arrays.asList(171L,1912L,172L));
+        GraphResult graphResult = casiaNeo4j.query(). queryRelationOnFuzzyByNodeIds(Arrays.asList(171L,1912L,172L));
 //        GraphResult graphResult = casiaNeo4j.query(). queryRelationOnPrecisionByNodeIds(Arrays.asList(171L,1912L,172L));
 //        GraphResult graphResult = casiaNeo4j.query(). queryRelationOnShortPathByStartNodeIdAndEndNodeId(1912,172,3);
 

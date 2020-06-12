@@ -6,7 +6,6 @@ import casia.isiteam.api.neo4j.common.enums.ConditionLevel;
 import casia.isiteam.api.neo4j.common.enums.CreateType;
 import casia.isiteam.api.neo4j.datasource.dbdao.Neo4jCommonDb;
 import casia.isiteam.api.neo4j.operation.interfaces.Neo4jOperationApi;
-import casia.isiteam.api.neo4j.util.Builder;
 import casia.isiteam.api.neo4j.util.LogsUtil;
 import casia.isiteam.api.toolutil.Validator;
 import org.slf4j.Logger;

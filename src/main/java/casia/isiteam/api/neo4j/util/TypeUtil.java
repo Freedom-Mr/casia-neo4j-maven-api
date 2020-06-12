@@ -3,6 +3,7 @@ package casia.isiteam.api.neo4j.util;
 import casia.isiteam.api.neo4j.common.enums.MatchLevel;
 import casia.isiteam.api.neo4j.common.manage.parms.BasicParms;
 import casia.isiteam.api.toolutil.Validator;
+import casia.isiteam.api.toolutil.escape.CasiaEscapeUtil;
 
 /**
  * ClassName: TypeUtil
@@ -30,7 +31,7 @@ public class TypeUtil extends BasicParms {
 
     public static Object typeRecognition(Object parm){
         if( parm instanceof String){
-            return "'"+EscapUtil.repalceChars(parm)+"'";
+            return "'" +CasiaEscapeUtil.neo4jEscape(parm)+"'";
         }else{
             return parm;
         }

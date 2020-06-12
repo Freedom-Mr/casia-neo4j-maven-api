@@ -1,9 +1,8 @@
 package casia.isiteam.api.neo4j.util.build;
 
-import casia.isiteam.api.neo4j.common.manage.parms.BasicParms;
-import casia.isiteam.api.neo4j.util.EscapUtil;
 import casia.isiteam.api.neo4j.util.TypeUtil;
 import casia.isiteam.api.toolutil.Validator;
+import casia.isiteam.api.toolutil.escape.CasiaEscapeUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -38,7 +37,7 @@ public class BuildNode extends AddBlank {
         if( Validator.check(parms) ){
             StringBuffer pa = new StringBuffer();
             parms.forEach((k,v)->{
-                pa.append(pa.length() > 0 ? COMMA : NONE).append(k).append(COLON).append(TypeUtil.typeRecognition(EscapUtil.repalceChars(v)));
+                pa.append(pa.length() > 0 ? COMMA : NONE).append(k).append(COLON).append(TypeUtil.typeRecognition(CasiaEscapeUtil.neo4jEscape(v)));
             });
             sb_node.append(LEFT_BRACES).append(pa).append(RIGHT_BRACES);
         }
@@ -52,7 +51,7 @@ public class BuildNode extends AddBlank {
             labels.forEach(s->sb_node.append(COLON).append(s));
         }
         if( Validator.check(_uuid) ){
-            sb_node.append(LEFT_BRACES).append(_UUID).append(COLON).append(TypeUtil.typeRecognition(EscapUtil.repalceChars(_uuid))).append(RIGHT_BRACES);
+            sb_node.append(LEFT_BRACES).append(_UUID).append(COLON).append(TypeUtil.typeRecognition(CasiaEscapeUtil.neo4jEscape(_uuid))).append(RIGHT_BRACES);
         }
         sb_node.append(RIGHT_PARENTHESES);
         return sb_node.toString();

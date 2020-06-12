@@ -1,25 +1,20 @@
 package casia.isiteam.api.neo4j.util;
 
 import casia.isiteam.api.neo4j.common.entity.result.NodeInfo;
-import casia.isiteam.api.neo4j.common.entity.model.RelationshipInfo;
-import casia.isiteam.api.neo4j.common.enums.CreateType;
-import casia.isiteam.api.neo4j.util.build.BuildCql;
-import casia.isiteam.api.neo4j.util.build.BuildNode;
-import casia.isiteam.api.neo4j.util.build.BuildReturn;
+import casia.isiteam.api.neo4j.util.build.BuildCqls;
 import casia.isiteam.api.toolutil.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
- * ClassName: Builder
+ * ClassName: BuilderUtil
  * Description: unknown
  * <p>
  * Created by casia.wzy on 2020/5/25
  * Email: zhiyou_wang@foxmail.com
  */
-public class Builder extends BuildCql {
+public class BuilderUtil extends BuildCqls {
 
 
 

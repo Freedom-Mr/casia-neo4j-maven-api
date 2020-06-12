@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ClassName: BuildCql
+ * ClassName: BuildCqls
  * Description: unknown
  * <p>
  * Created by casia.wzy on 2020/6/4
  * Email: zhiyou_wang@foxmail.com
  */
-public class BuildCql extends BuildReturn {
+public class BuildCqls extends BuildReturn {
 
     protected String node_1 = " (%s) ";
     protected String node_2 = " (%s:%s) ";
