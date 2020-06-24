@@ -32,7 +32,15 @@ public enum MatchLevel {
     /**
      * 属性不存在
      */
-    Missing("Missing");
+    Missing("Missing"),
+    /**
+     * 大于
+     */
+    Outgoing(">"),
+    /**
+     * 小于
+     */
+    Incoming("<");
 
     private String level;
     private MatchLevel(String level) {

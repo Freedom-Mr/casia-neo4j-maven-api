@@ -71,15 +71,20 @@ public class CreateBuider {
     public boolean createRelationByNodeId(CreateType createType , long start_node_id,long end_node_id,String type){
         if( !Validator.check(type) ){logger.warn(LogsUtil.compositionLogEmpty(" relation type "));return true;
         }
-        return createApi.createRelationByNodeIdBuilder(createType,new RelationshipInfo(new NodeInfo().setId(start_node_id),new NodeInfo().setId(end_node_id),type));
+        return createApi.createRelationByNodeInfoBuilder(createType,new RelationshipInfo(new NodeInfo().setId(start_node_id),new NodeInfo().setId(end_node_id),type));
+    }
+    public boolean createRelationByNodeId(CreateType createType , long start_node_id,long end_node_id,String type,boolean direction){
+        if( !Validator.check(type) ){logger.warn(LogsUtil.compositionLogEmpty(" relation type "));return true;
+        }
+        return createApi.createRelationByNodeInfoBuilder(createType,new RelationshipInfo(new NodeInfo().setId(start_node_id),new NodeInfo().setId(end_node_id),type).setDirection(direction));
     }
     public boolean createRelationByNodeId(CreateType createType , RelationshipInfo... relationInfos){
         if( !Validator.check(relationInfos) ){return true;}
-        return createApi.createRelationByNodeIdBuilder(createType,relationInfos);
+        return createApi.createRelationByNodeInfoBuilder(createType,relationInfos);
     }
     public boolean createRelationByNodeId(CreateType createType ,  List<RelationshipInfo> relationInfos){
         if( !Validator.check(relationInfos) ){return true;}
-        return createApi.createRelationByNodeIdBuilder(createType,relationInfos.toArray(new RelationshipInfo[relationInfos.size()]));
+        return createApi.createRelationByNodeInfoBuilder(createType,relationInfos.toArray(new RelationshipInfo[relationInfos.size()]));
     }
     /**
      *

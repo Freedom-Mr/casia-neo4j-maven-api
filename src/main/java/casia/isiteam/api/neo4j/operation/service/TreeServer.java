@@ -6,7 +6,7 @@ import casia.isiteam.api.neo4j.common.entity.result.RelationInfo;
 import casia.isiteam.api.neo4j.datasource.dbdao.Neo4jCommonDb;
 import casia.isiteam.api.neo4j.operation.interfaces.Neo4jOperationApi;
 import casia.isiteam.api.neo4j.util.LogsUtil;
-import casia.isiteam.api.neo4j.util.build.AddBlank;
+import casia.isiteam.api.neo4j.util.build.CqlInfoParms;
 import casia.isiteam.api.toolutil.Validator;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -39,14 +39,11 @@ public class TreeServer extends Neo4jCommonDb implements Neo4jOperationApi.TreeA
         StringBuffer cql = new StringBuffer();
         cql.append(MATCH).
                 append( node(A,labels) ).
-                append( AddBlank.addBlank(OPTIONAL) ).
+                append( addBlank(OPTIONAL) ).
                 append( MATCH ).
-                append(node(B,labels)).
-                append( CROSS ).
-                append(relation(R)).
-                append( CROSS ).
-                append( node() ).
-                append(returnField(null,null,0L,1000L));
+                append(  nodeRelation(B+symbolsAll(COLON,labels),R,NONE) ).
+                append( returnAll() ).
+                append( addLimit(0L,1000L));
         return executeDruidReadCql(this.openTableData,cql.toString());
     }
     /**
@@ -120,7 +117,7 @@ public class TreeServer extends Neo4jCommonDb implements Neo4jOperationApi.TreeA
     }
 
     private long searchNodeTotalByLabel(List<String> labels){
-        StringBuffer cql = new StringBuffer();
+        StringBuffer cql = s();
         String n_asKey= asKey();
         cql.append(MATCH).
                 append( !Validator.check(labels) ? node(n_asKey) : node(n_asKey,labels) ).

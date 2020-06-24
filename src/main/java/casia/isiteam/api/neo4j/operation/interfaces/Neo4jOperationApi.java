@@ -25,6 +25,7 @@ public class Neo4jOperationApi{
         void setReturnField(String ... field);
         void closeTableData();
         void openNodeRelation();
+        void openDirection();
         GraphResult searchByCondition(String cql);
         GraphResult searchByCondition(String cql,Object ... values);
         GraphResult searchAllLabels();
@@ -48,7 +49,7 @@ public class Neo4jOperationApi{
         GraphResult searchNodeRelationByType(List<String> types);
         GraphResult searchNodeRelationByIdIn(ConditionLevel conditionLevel , List<Long> ids);
         GraphResult searchNodeRelationByStartNode(NodeInfo nodeInfo);
-        GraphResult searchNodeRelationByNodeId(long id,int maxLevel);
+        GraphResult searchNodeRelationByNodeId(long id,int maxLevel,String relationshipFilter,String labelFilter);
         GraphResult searchNodeRelationByStartNodeIdIn(ConditionLevel conditionLevel ,List<Long> ids);
         GraphResult searchNodeRelationByStartNodeAndType(NodeInfo startNodeInfo,List<String> types);
         GraphResult searchNodeRelationByStartNodeIdInAndType(List<Long> start_node_ids ,List<String> type);
@@ -58,6 +59,8 @@ public class Neo4jOperationApi{
         GraphResult searchNodeRelationOnFuzzyByNodeIds(List<Long> ids);
         GraphResult searchNodeRelationOnPrecisionByNodeIds(List<Long> ids);
         GraphResult searchNodeRelationOnShortPathByStartNodeIdAndEndNodeId(long start_node_id,long end_node_id,int pathLength);
+        GraphResult searchNodeRelationOnPathLengthByStartNodeIdAndEndNodeId(long start_node_id,long end_node_id,int startPathLength,int endPathLength);
+        GraphResult searchNodeRelationOnExtendTreeByNodeIdIn(List<Long> ids,int maxLevel,String relationshipFilter,String labelFilter );
 
         GraphResult searchNodeOnFullByQueryString(String indexName,String queryString);
         GraphResult searchNodeRelationOnFullByQueryString(String indexName,String queryString);
@@ -86,7 +89,6 @@ public class Neo4jOperationApi{
         boolean create(String cql,List<Object[]> values);
         boolean createNode(CreateType createType , NodeInfo ... node);
         boolean createRelationByNodeInfoBuilder(CreateType createType , RelationshipInfo ... relationInfos);
-        boolean createRelationByNodeIdBuilder(CreateType model, RelationshipInfo... relationInfos);
         boolean createRelationByNodeUuIdBuilder(CreateType createType ,  RelationshipInfo... relationInfos);
 
         boolean addLabelByNodeId(long _id, List<String> labels);

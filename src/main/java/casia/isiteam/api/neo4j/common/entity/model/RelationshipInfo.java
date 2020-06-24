@@ -18,7 +18,7 @@ public class RelationshipInfo {
     private NodeInfo endNodeInfo;
 
     private String type;
-    private Boolean direction = false;
+    private boolean direction = false;
     private Object _uuId;
     private Map<String,Object> parameters = new HashMap<>();
 
@@ -81,11 +81,11 @@ public class RelationshipInfo {
         return this;
     }
 
-    public Boolean getDirection() {
+    public boolean getDirection() {
         return direction;
     }
 
-    public RelationshipInfo setDirection(Boolean direction) {
+    public RelationshipInfo setDirection(boolean direction) {
         this.direction = direction;
         return this;
     }

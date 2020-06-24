@@ -81,6 +81,11 @@ public class Neo4jParms {
     protected final static String _ENDID = "_endId";
     protected final static String REMOVE = "remove";
     protected final static String ALLSHORTESTPATHS = "allshortestPaths";
+    protected final static String MAXLEVEL = "maxLevel";
+    protected final static String RELATIONSHIPFILTER = "relationshipFilter";
+    protected final static String LABELFILTER = "labelFilter";
+    protected final static String FILTERSTARTNODE = "filterStartNode";
+    protected final static String BFS = "bfs";
 
     /**
      * return data type

@@ -137,7 +137,7 @@ public class Neo4jCommonDb extends Neo4jDbSource {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            logger.debug("cql: {}",cql);
+            logger.info("cql: {}",cql);
             connection =NeoDriver().getConnection();
             preparedStatement = connection.prepareStatement(cql);
             int result = preparedStatement.executeUpdate();
@@ -159,7 +159,7 @@ public class Neo4jCommonDb extends Neo4jDbSource {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            logger.debug("cql: {}",cql);
+            logger.info("cql: {}",cql);
             connection =NeoDriver().getConnection();
             preparedStatement = connection.prepareStatement(cql);
             if( Validator.check(values) ){
@@ -186,7 +186,7 @@ public class Neo4jCommonDb extends Neo4jDbSource {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            logger.debug("cql: {}",cql);
+            logger.info("cql: {}",cql);
             connection =NeoDriver().getConnection();
             preparedStatement = connection.prepareStatement(cql);
             if( Validator.check(values) ){
@@ -212,7 +212,7 @@ public class Neo4jCommonDb extends Neo4jDbSource {
         PreparedStatement preparedStatement = null;
         ResultSet result = null;
         try {
-            logger.debug("cql: {}",cql);
+            logger.info("cql: {}",cql);
             connection =NeoDriver().getConnection();
             preparedStatement = connection.prepareStatement(cql);
             result = preparedStatement.executeQuery();
@@ -230,7 +230,7 @@ public class Neo4jCommonDb extends Neo4jDbSource {
         PreparedStatement preparedStatement = null;
         ResultSet result = null;
         try {
-            logger.debug("cql: {}",cql);
+            logger.info("cql: {}",cql);
             connection =NeoDriver().getConnection();
             preparedStatement = connection.prepareStatement(cql);
             if( Validator.check(values) ){

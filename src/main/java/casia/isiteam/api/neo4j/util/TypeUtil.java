@@ -19,8 +19,10 @@ public class TypeUtil extends BasicParms {
             return EQUAL+pm;
         }else if( MatchLevel.Prefix.getLevel().equals( matchLevel.getLevel()) ||
                 MatchLevel.Suffix.getLevel().equals( matchLevel.getLevel()) ||
+                MatchLevel.Outgoing.getLevel().equals( matchLevel.getLevel()) ||
+                MatchLevel.Incoming.getLevel().equals( matchLevel.getLevel()) ||
                 MatchLevel.Contains.getLevel().equals( matchLevel.getLevel()) ){
-            return matchLevel.getLevel()+pm;
+            return BLANK +matchLevel.getLevel()+BLANK +pm;
         }else if(  MatchLevel.Regexp.getLevel().equals( matchLevel.getLevel()) ){
             return EQUAL+BREAK_LINE+typeRecognition(DOT+STAR+parm+DOT+STAR);
         }else if( MatchLevel.Missing.getLevel().equals( matchLevel.getLevel())){

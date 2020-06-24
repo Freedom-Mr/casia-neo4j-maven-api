@@ -67,6 +67,12 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
     public void openNodeRelation(){
         this.openNodeRelation= true;
     }
+    /**
+     * 开启节点之间关系信息(只对查询节点函数有效)
+     */
+    public void openDirection(){
+        this.openDirection= true;
+    }
 
     /**
      * custom search cql
@@ -98,18 +104,18 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
      */
     public GraphResult searchNode(){
         GraphResult graphResult = executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( openNodeRelation ? addP(nodeRelation(A,PATH_1,NONE)) : node(A) ).
-                append(returnField(A,returnFields,skip,limit)
-                ).toString() );
+                append( this.openNodeRelation ? addP(nodeRelation(A,PATH_1,NONE)) : node(A) ).
+                append( returnField(A,returnFields)
+                ).append( page() ).toString() );
         return graphResult;
     }
     public GraphResult searchNodeByLabel(List<String> labels){
         return executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( openNodeRelation ?
-                        addP( node(A,labels)+CROSS+relation(PATH_1)+CROSS+node(NONE,labels) ) :
-                        !Validator.check(labels) ? node(A) : node(A,labels) ).
-                append( returnField(A,returnFields,skip,limit)
-                ).toString());
+                append( this.openNodeRelation ?
+                        addP(nodeRelation(A+symbolsAll(COLON,labels),PATH_1,B+symbolsAll(COLON,labels))) :
+                        node(A,labels) ).
+                append( returnField(A,returnFields)
+                ).append( page() ).toString() );
     };
     /**
      * search Node by PRIMARY KEY
@@ -119,36 +125,47 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
             return new GraphResult();
         }
         return executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( openNodeRelation ? addP(nodeRelation(A,PATH_1,B)) : node(A) ).
-                append( where(A, conditionLevel.getLevel() ,ids.toArray(new Long[ids.size()])) ).
-                append( openNodeRelation ? where(B, conditionLevel.getLevel() ,ids.toArray(new Long[ids.size()])).replace(WHERE,AND) : NONE ).
-                append( returnField(A,returnFields,skip,limit)
-                ).toString());
+                append( this.openNodeRelation ? addP(nodeRelation(A,PATH_1,B)) : node(A) ).
+                append(addBlank(WHERE)).append( conditionLevel.getLevel() ).
+                append( addId(A,ids) ).
+                append( this.openNodeRelation ?
+                          addBlank(AND) +
+                                  conditionLevel.getLevel()  + addId(B, ids ) : NONE).
+                                        append( returnField(A,returnFields)
+                                        ).append( addLimit(this.skip,this.limit) ).toString());
     }
 
     /**
      * search Node by build Parameters
      */
     public GraphResult searchNodeByParameters(ConditionLevel conditionLevel , ParameterCombine parmsCombine, List<Attribute> attributes){
-        return executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( openNodeRelation ? addP(nodeRelation(A,PATH_1,B)) : node(A) ).
-                append( where(A, conditionLevel.getLevel(), parmsCombine ,attributes) ).
-                append( openNodeRelation ? where(B, conditionLevel.getLevel() ,parmsCombine ,attributes).replace(WHERE,AND) : NONE  ).
-                append(returnField(A,returnFields,skip,limit)
-                ).toString());
+        StringBuffer s = s();
+        s.append(MATCH).append( this.openNodeRelation ? addP(nodeRelation(A,PATH_1,B)) : node(A) );
+        if( Validator.check(attributes) ){
+            s. append( addBlank(WHERE) ).append( conditionLevel.getLevel() ).
+                    append( node(symbols( parmsCombine.name() ,A, attributes)) ).
+                    append( this.openNodeRelation ? addBlank(AND) + conditionLevel.getLevel() + node( symbols( parmsCombine.name() ,B, attributes)) : NONE );
+        }
+        return executeDruidReadCql(this.openTableData,
+                s.append( returnField(A,returnFields)
+                ).append( page() ).toString());
     }
     /**
      * search Node by build node info
      */
     public GraphResult searchNodeByLabelAndParameters(ConditionLevel conditionLevel , List<String> labels, ParameterCombine parmsCombine, List<Attribute> attributes ){
         return executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( openNodeRelation ? addP(node(A,labels)+CROSS+relation(PATH_1)+CROSS+node(B,labels) )
+                append( this.openNodeRelation ?
+                        addP( nodeRelation( A+symbolsAll(COLON,labels), PATH_1, B+symbolsAll(COLON,labels)) )
                         : node(A,labels) ).
-                append( where(A,conditionLevel.getLevel(), parmsCombine ,attributes) ).
-                append( openNodeRelation ? where(B, conditionLevel.getLevel() ,parmsCombine ,attributes).replace(WHERE,AND) : NONE  ).
-                append( returnField(A,returnFields,skip,limit)
-                ).toString());
+                append( addBlank(WHERE)).append(conditionLevel.getLevel() ).
+                append( symbols(parmsCombine.name(),A,attributes) ).
+                append( this.openNodeRelation ? addBlank(AND) + conditionLevel.getLevel()  + symbols( parmsCombine.name() ,B, attributes) : NONE  ).
+                append( returnField(A,returnFields)
+                ).append( page() ).toString());
     }
+
+
     public GraphResult searchNodeTotal(){
         return executeDruidReadCql(this.openTableData, s().append(MATCH).
                 append( node(A) ).
@@ -157,14 +174,13 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
     }
     public GraphResult searchNodeTotalByLabel(List<String> labels){
         return executeDruidReadCql(this.openTableData, s().append(MATCH).
-                append( !Validator.check(labels) ? node(A) : node(A,labels) ).
-                append( returnCount(A)
-                ).toString() );
+                append( node(A,labels) ).
+                append( returnCount(A) ).toString() );
     }
     public GraphResult searchNodeTotalByLabelAndParameters(ConditionLevel conditionLevel , List<String> labels, ParameterCombine parmsCombine, List<Attribute> attributes){
         return executeDruidReadCql(this.openTableData, s().append(MATCH).
-                append( !Validator.check(labels) ? node(A) : node(A,labels) ).
-                append( where(A,conditionLevel.getLevel(),parmsCombine,attributes) ).
+                append( node(A,labels) ).append(addBlank(WHERE)).append(conditionLevel.getLevel()).
+                append( symbols(parmsCombine.name(),A,attributes) ).
                 append( returnCount(A)
                 ).toString() );
     }
@@ -183,7 +199,8 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
     public GraphResult searchRelationTotalByTypeAndParameters(List<String> types, ParameterCombine parmsCombine, List<Attribute> attributes){
         return executeDruidReadCql(this.openTableData, s().append(MATCH).
                 append( String.format(nodeRelation_2,R+COLON+symbols(LINE,types)) ).
-                append( where(R,NONE,parmsCombine,attributes) ).
+                append(addBlank(WHERE)).
+                append( symbols(parmsCombine.name(),R,attributes) ).
                 append( returnCount(R)
                 ).toString() );
     }
@@ -195,23 +212,15 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
      */
     public GraphResult searchNodeRelation(){
         return executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( node(A) ).
-                append(CROSS).
-                append( relation(R) ).
-                append(CROSS).
-                append( node(B) ).
-                append(returnField( B ,returnFields,skip,limit)
-                ).toString());
+                append( this.openNodeRelation ? nodeRelationDirection(A,R,B) : nodeRelation(A,R,B) ).
+                append( returnField( A ,returnFields)).append(page())
+                .toString());
     }
     public GraphResult searchNodeRelationByType(List<String> types){
         return executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( node(A) ).
-                append(CROSS).
-                append( relation(R,types) ).
-                append(CROSS).
-                append( node(B) ).
-                append(returnField( B ,returnFields,skip,limit)
-                ).toString());
+                        append( this.openNodeRelation ? nodeRelationDirection(A,R ,types,B) : nodeRelation(A,R,types,B) ).
+                        append( returnField( A ,returnFields)).append(page())
+                .toString());
     }
     /**
      * search Node by PRIMARY KEY
@@ -221,13 +230,9 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
             return new GraphResult();
         }
         return executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( node(A) ).
-                append(CROSS).
-                append( relation(R) ).
-                append(CROSS).
-                append( node(B) ).
-                append( where(R,conditionLevel.getLevel(),ids)).
-                append(returnField( B ,returnFields,skip,limit)
+                append( this.openDirection ? nodeRelationDirection(A,R,B): nodeRelation(A,R,B) ).append(addBlank(WHERE)).append(conditionLevel.getLevel()).
+                append(addId(R,ids)).
+                append( returnField( B ,returnFields)).append(page()
                 ).toString());
     }
 
@@ -237,39 +242,34 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
      * @return
      */
     public GraphResult searchNodeRelationByStartNode(NodeInfo nodeInfo){
-        StringBuffer cql = new StringBuffer();
+        StringBuffer cql = s();
         if( Validator.check(nodeInfo.get_uuId()) ){
             nodeInfo.getParameters().put(_UUID,nodeInfo.get_uuId());
         }
         cql.append(MATCH).
-                append( !Validator.check(nodeInfo.getLabels()) ? node(A) : node(A,nodeInfo.getLabels()) ).
-                append(CROSS).
-                append( relation(R) ).
-                append(CROSS).
-                append( node(B) ).
-                append( Validator.check(nodeInfo.getId()) ?  where(A,NONE,nodeInfo.getId()) : where(A, NONE , ParameterCombine.AND ,nodeInfo.getParameters() ) ).
-                append(returnField( A ,returnFields,skip,limit)
-                );
+                append( !this.openDirection ?  nodeRelation(A+symbolsAll(COLON,nodeInfo.getLabels()),R,B)  :  nodeRelationDirection( A+symbolsAll(COLON,nodeInfo.getLabels()),R,B));
+                if( Validator.check(nodeInfo.getId()) && nodeInfo.getId()>-1 ){
+                    cql.append(addBlank(WHERE)).append(addId(A,nodeInfo.getId()));
+                }else if( Validator.check(nodeInfo.getParameters()) ){
+                    cql.append(addBlank(WHERE)).append(symbols(ParameterCombine.AND.name(),EQUAL,A,nodeInfo.getParameters()));
+                }
+        cql.append(returnField( A ,returnFields)).append(page());
         return executeDruidReadCql(this.openTableData,cql.toString());
     }
-    public GraphResult searchNodeRelationByNodeId(long id,int maxLevel){
+    public GraphResult searchNodeRelationByNodeId(long id,int maxLevel,String relationshipFilter,String labelFilter){
         return executeDruidReadCql(this.openTableData,s().append(MATCH).
-                append( String.format(node_1,A) ).append(WHERE).append( String.format(id_1,A,id)).
-                append( addBlank(CALL) ).append( String.format(apoc_1,A,maxLevel) ).
-                append( addBlank(YIELD) ). append( symbols(COMMA,NODES,RELATIONSHIPS)).append( addBlank(RETURN) ).
-                append(symbols(COMMA,NODES,RELATIONSHIPS)).append(skipLimit(skip,limit))
+                append( node(A) ).append(WHERE).append( addId(A,id)).
+                append( String.format(apoc_1,A,addApocParms(MAXLEVEL,maxLevel,LIMIT,this.limit,RELATIONSHIPFILTER,relationshipFilter,LABELFILTER,labelFilter)) ).
+                append( addBlank(YIELD) ). append( symbols(COMMA,NODES,RELATIONSHIPS) ).append( addBlank(RETURN) ).
+                append( symbols(COMMA,NODES,RELATIONSHIPS) )
                 .toString());
     }
     public GraphResult searchNodeRelationByStartNodeIdIn(ConditionLevel conditionLevel ,List<Long> ids){
         StringBuffer cql = new StringBuffer();
         cql.append(MATCH).
-                append( node(A) ).
-                append(CROSS).
-                append( relation(R) ).
-                append(CROSS).
-                append( node(B) ).
-                append( where(A,conditionLevel.getLevel(),ids)  ).
-                append(returnField( A ,returnFields,skip,limit)
+                append( this.openDirection ? nodeRelationDirection(A,R,B):nodeRelation(A,R,B) ).
+                append(addBlank(WHERE)).append(addBlank(conditionLevel.getLevel())).append(addId(A,ids)).
+                append(returnField( A ,returnFields)).append( page()
                 );
         return executeDruidReadCql(this.openTableData,cql.toString());
     }
@@ -279,26 +279,21 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
             startNodeInfo.getParameters().put(_UUID,startNodeInfo.get_uuId());
         }
         cql.append(MATCH).
-                append( !Validator.check(startNodeInfo.getLabels()) ? node(A) : node(A,startNodeInfo.getLabels()) ).
-                append(CROSS).
-                append( relation(R,type) ).
-                append(CROSS).
-                append( node(B) ).
-                append( Validator.check(startNodeInfo.getId()) ?  where(A,NONE,startNodeInfo.getId()) : where(A, NONE , ParameterCombine.AND ,startNodeInfo.getParameters() ) ).
-                append(returnField( A ,returnFields,skip,limit)
+                append( this.openDirection ? nodeRelationDirection(A+symbolsAll(COLON,startNodeInfo.getLabels()),R,type,B):
+                        nodeRelation(A+symbolsAll(COLON,startNodeInfo.getLabels()),R,type,B) ).
+                append(addBlank(WHERE)).
+                append( Validator.check(startNodeInfo.getId()) ?  addId(A,startNodeInfo.getId()) : symbols(  ParameterCombine.AND.name() ,EQUAL ,A,startNodeInfo.getParameters() ) ).
+                append(returnField( A ,returnFields)).append(page()
                 );
         return executeDruidReadCql(this.openTableData,cql.toString());
     }
     public GraphResult searchNodeRelationByStartNodeIdInAndType(List<Long> start_node_ids ,List<String> type){
         StringBuffer cql = s();
         cql.append(MATCH).
-                append(  node(A) ).
-                append(CROSS).
-                append( relation(R,type) ).
-                append(CROSS).
-                append( node(B) ).
-                append(   where(A,NONE,start_node_ids)).
-                append(returnField( A ,returnFields,skip,limit)
+                append( this.openDirection ? nodeRelationDirection(A,R,type,B):nodeRelation(A,R,type,B) ).
+                append(addBlank(WHERE)).
+                append(   addId(A,start_node_ids)).
+                append(returnField( A ,returnFields)).append(page()
                 );
         return executeDruidReadCql(this.openTableData,cql.toString());
     }
@@ -311,29 +306,21 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
             endNodeInfo.getParameters().put(_UUID,endNodeInfo.get_uuId());
         }
         cql.append(MATCH).
-                append( !Validator.check(startNodeInfo.getLabels()) ? node(A) : node(A,startNodeInfo.getLabels()) ).
-                append(CROSS).
-                append( relation(R,type) ).
-                append(CROSS).
-                append( !Validator.check(endNodeInfo.getLabels()) ? node(B) : node(B,endNodeInfo.getLabels()) ).
-                append( Validator.check(startNodeInfo.getId()) ?  where(A,NONE,startNodeInfo.getId()) : where(A, NONE , ParameterCombine.AND ,startNodeInfo.getParameters() ) ).
-                append( (Validator.check(endNodeInfo.getId()) ?  where(B,NONE,endNodeInfo.getId()) : where(B, NONE , ParameterCombine.AND ,endNodeInfo.getParameters() )).replace(WHERE,AND) ).
-                append(returnField( skip,limit)
-                );
+                append( openDirection ? nodeRelationDirection(A+symbolsAll(COLON,startNodeInfo.getLabels()),R,type,B+symbolsAll(COLON,endNodeInfo.getLabels())):
+                        nodeRelation(A+symbolsAll(COLON,startNodeInfo.getLabels()),R,type,B+symbolsAll(COLON,endNodeInfo.getLabels()) ) )
+                ;
+                StringBuffer where = s();
+                where.append( startNodeInfo.getId()>-1 ?  addId(A,startNodeInfo.getId()) : symbols(ParameterCombine.AND.name() ,EQUAL,A ,startNodeInfo.getParameters() ) ).
+                append(where.length()>0 ? addBlank(AND) : NONE).append( endNodeInfo.getId()>-1 ?   addId(A,endNodeInfo.getId()) : symbols(ParameterCombine.AND.name() ,EQUAL,B ,endNodeInfo.getParameters() ) );
+                cql.append( where.length()> 0 ? addBlank(WHERE)+where : NONE ).append(returnField(A,returnFields)).append(page());
         return executeDruidReadCql(this.openTableData,cql.toString());
     }
     public GraphResult searchNodeRelationByStartNodeIdAndTypeAndEndNodeId(List<Long> start_node_ids,List<String> type,List<Long> end_node_ids){
         StringBuffer cql = new StringBuffer();
         cql.append(MATCH).
-                append( node(A) ).
-                append(CROSS).
-                append( relation(R,type) ).
-                append(CROSS).
-                append( node(B) ).
-                append( where(A,NONE,start_node_ids) ).
-                append( where(B,NONE,end_node_ids).replace(WHERE,AND) ).
-                append(returnField( skip,limit)
-                );
+                append( this.openDirection ? nodeRelationDirection(A,R,type,B):
+                        nodeRelation(A,R,type,B)).append(addBlank(WHERE)).append(addId(A,start_node_ids)).append(addBlank(AND)).append(addId(B,end_node_ids))
+                .append(returnField(A,returnFields)).append(page());
         return executeDruidReadCql(this.openTableData,cql.toString());
     }
 
@@ -347,7 +334,7 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
         StringBuffer return_ =s();
         ids.forEach(s->{
             match_.append(match_.length()==0?MATCH+BLANK:COMMA).append(P+s).append(EQUAL).append(nodeRelation(A+s,NONE,B));
-            where_.append(where_.length()==0?WHERE:AND).append(where(A+s,NONE,s).replace(WHERE,NONE));
+            where_.append(where_.length()==0?WHERE:AND).append(addId(A+s,s));
             return_.append(return_.length()==0?addBlank(RETURN):COMMA).append(P+s);
         });
         return executeDruidReadCql(this.openTableData,
@@ -373,37 +360,79 @@ public class SearchServer extends Neo4jCommonDb implements Neo4jOperationApi.Que
                         append( relation(r2_asKey) ).
                         append(CROSS).
                         append( node(B) ).
-                        append( where(A,NONE,ids) ).
-                        append( where(B,NONE,ids).replace(WHERE,AND) ).
-                        append(returnField( skip,limit)
-                        ).toString()
+                        append(addBlank(WHERE)).
+                        append( addId(A,ids) ).append(addBlank(AND)).
+                        append(  addId(B,ids) ).
+                        append( returnField(C,returnFields) ).append(page())
+                        .toString()
         );
     }
 
+    /**
+     * 最短路径
+     * @param start_node_id
+     * @param end_node_id
+     * @param pathLength
+     * @return
+     */
     public GraphResult searchNodeRelationOnShortPathByStartNodeIdAndEndNodeId(long start_node_id,long end_node_id,int pathLength){
         return executeDruidReadCql(this.openTableData,
                 s().append(MATCH).append(BLANK).append(P).append(EQUAL).
                         append( ALLSHORTESTPATHS ).append(LEFT_PARENTHESES).
-                        append(nodeRelation(A,RANGE_PATH_1_+(pathLength<2?2:pathLength),B)).append(RIGHT_PARENTHESES).append(where(A,NONE,start_node_id)).
+                        append(nodeRelation(A,RANGE_PATH_1_+(pathLength<2?2:pathLength),B)).append(RIGHT_PARENTHESES).
+                        append( addBlank(WHERE)).
+                        append( addId(A,start_node_id)).
                         append(AND)
-                        .append(where(B,NONE,end_node_id).replace(WHERE,NONE)).
-                        append(returnField(P, skip,limit)
+                        .append( addId(B,end_node_id) ).
+                        append(returnField(P)).append(page()
                         ).toString()
+        );
+    }
+
+    /**
+     * 两点关联发现
+     * 根据关系层级范围，查询两节点关系详情
+     * @param start_node_id
+     * @param end_node_id
+     * @param startPathLength
+     * @param endPathLength
+     * @return
+     */
+    public GraphResult searchNodeRelationOnPathLengthByStartNodeIdAndEndNodeId(long start_node_id,long end_node_id,int startPathLength,int endPathLength){
+        String pathLength = STAR+startPathLength+".."+endPathLength;
+        return executeDruidReadCql(this.openTableData,
+                s().append(MATCH).append(BLANK).append(
+                        addP( this.openDirection ? nodeRelationDirection(A,pathLength,B) :nodeRelation(A,pathLength,B) )
+                ).append( addBlank(WHERE)).
+                        append( addId(A,start_node_id)).
+                        append(AND)
+                        .append( addId(B,end_node_id) ).
+                        append(returnField(P)).append(page()
+                ).toString()
         );
     }
 
     public GraphResult searchNodeOnFullByQueryString(String indexName,String queryString){
         return executeDruidReadCql(this.openTableData,
                 s().append(node_full_text(indexName,queryString)).
-                        append(returnField(skip,limit)
+                        append(returnAll()).append(page()
                         ).toString()
         );
     }
     public GraphResult searchNodeRelationOnFullByQueryString(String indexName,String queryString){
         return executeDruidReadCql(this.openTableData,
                 s().append(relation_full_text(indexName,queryString)).
-                        append(returnField(skip,limit)
+                        append(returnAll()).append(page()
                         ).toString()
         );
     }
+    public GraphResult searchNodeRelationOnExtendTreeByNodeIdIn(List<Long> ids,int maxLevel,String relationshipFilter,String labelFilter ){
+        return executeDruidReadCql(this.openTableData,s().append(MATCH).
+                append( node(A) ).append(WHERE).append( addId(A,ids)).
+                append( String.format(apoc_2,A,addApocParms(MAXLEVEL,maxLevel,LIMIT,this.limit,RELATIONSHIPFILTER,relationshipFilter,LABELFILTER,labelFilter)) ).
+                append( addBlank(YIELD) ). append( "path" ).append( addBlank(RETURN) ).
+                append( "path" )
+                .toString());
+    }
+
 }

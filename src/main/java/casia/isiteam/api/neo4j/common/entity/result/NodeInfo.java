@@ -20,7 +20,7 @@ public class NodeInfo {
     /**
      * node uniq id
      */
-    private Object _uuId;
+    private Object _uuId ;
     /**
      * node label
      */

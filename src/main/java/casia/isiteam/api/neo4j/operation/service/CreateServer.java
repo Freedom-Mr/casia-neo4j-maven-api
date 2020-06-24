@@ -51,7 +51,7 @@ public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.Cre
      * @return
      */
    public boolean createNode(CreateType createType , NodeInfo ... node){
-       List<String> cqls = buildCreateNodeCql(createType,node);
+       List<String> cqls = createNodeCql(createType,node);
        if( Validator.check(cqls) ){
            cqls.forEach(cql->{
                executeDruidWriteCql(cql);
@@ -67,22 +67,7 @@ public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.Cre
      * @return
      */
     public boolean createRelationByNodeInfoBuilder(CreateType model, RelationshipInfo... relationInfos){
-        List<String> cqls = buildCreateNodeRelationCql(model,relationInfos);
-        if( Validator.check(cqls) ){
-            cqls.forEach(cql->{
-                executeDruidWriteCql(cql);
-            });
-        }
-        return true;
-    }
-    /**
-     * build cql info by create relation
-     * @param model
-     * @param relationInfos
-     * @return
-     */
-    public boolean createRelationByNodeIdBuilder(CreateType model, RelationshipInfo ... relationInfos){
-        List<String> cqls = buildCreateNodeRelationByNodeId(model,relationInfos);
+        List<String> cqls = createRelationCql(model,relationInfos);
         if( Validator.check(cqls) ){
             cqls.forEach(cql->{
                 executeDruidWriteCql(cql);
@@ -98,7 +83,7 @@ public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.Cre
      * @return
      */
     public boolean createRelationByNodeUuIdBuilder(CreateType model, RelationshipInfo ... relationInfos){
-        List<String> cqls = buildCreateNodeRelationByNodeUuIdCql(model,relationInfos);
+        List<String> cqls = createRelationByNodeUuIdCql(model,relationInfos);
         if( Validator.check(cqls) ){
             cqls.forEach(cql->{
                 executeDruidWriteCql(cql);
@@ -115,8 +100,12 @@ public class CreateServer extends Neo4jCommonDb implements Neo4jOperationApi.Cre
      */
     @Override
     public boolean addLabelByNodeId(long _id, List<String> labels) {
-        return executeDruidWriteCql(s().append(MATCH).append(node(A)).append(where(A, ConditionLevel.MUST.getLevel(),_id)).
-                append(set(A,labels)).toString());
+        if( !Validator.check(labels) ){
+            logger.warn(LogsUtil.compositionLogEmpty(" labels "));
+            return false;
+        }
+        return executeDruidWriteCql(s().append(MATCH).append(node(A)).append(addBlank(WHERE)).append(addId(A,_id)).
+                append(addBlank(SET)).append(A).append(symbolsAll(COLON,labels) ).toString() );
     }
 
 

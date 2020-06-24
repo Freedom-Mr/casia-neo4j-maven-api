@@ -52,10 +52,16 @@ public class QueryBuider {
         queryApi.openNodeRelation();
         return this;
     }
+    public QueryBuider setOpenDirection(){
+        queryApi.openDirection();
+        return this;
+    }
     public QueryBuider setReturnField(List<String> field){
         queryApi.setReturnField(Validator.check(field) ? field.toArray(new String[field.size()]): null);
         return this;
     }
+
+
     public GraphResult queryAllLabels(){
         return queryApi.searchAllLabels();
     }
@@ -264,6 +270,8 @@ public class QueryBuider {
         return queryApi.searchNodeRelationByStartNodeIdAndTypeAndEndNodeId(start_node_ids,type,end_node_ids);
     }
 
+
+
     public GraphResult queryRelationOnFuzzyByNodeIds(List<Long> ids){
         if( !Validator.check(ids) ){ logger.warn(LogsUtil.compositionLogEmpty("ids"));return new GraphResult(); }
         if( ids.size()<2 ){ logger.warn("id numbers must greater than or equal to 2");return new GraphResult(); }
@@ -293,7 +301,29 @@ public class QueryBuider {
         return queryApi.searchNodeRelationOnFullByQueryString(indexName,queryString);
     }
 
-    public GraphResult queryRelationByNodeId(long id,int maxLevel){
-        return queryApi.searchNodeRelationByNodeId(id,maxLevel);
+    public GraphResult queryRelationByNodeId(long id,int maxPathLength){
+        return queryApi.searchNodeRelationByNodeId(id,maxPathLength,null,null);
     }
+    public GraphResult queryRelationByNodeId(long id,int maxPathLength,String relationshipFilter,String labelFilter){
+        return queryApi.searchNodeRelationByNodeId(id,maxPathLength,relationshipFilter,labelFilter);
+    }
+
+    public GraphResult queryRelationOnPathLengthByStartNodeIdAndEndNodeId(long start_node_id,long end_node_id,int startPathLength,int endPathLength){
+        if( startPathLength < 0 && startPathLength>endPathLength ){ logger.warn(" (startPathLength must less than endPathLength) AND (startPathLength must not less than 0)");
+            return new GraphResult();
+        }
+        return queryApi.searchNodeRelationOnPathLengthByStartNodeIdAndEndNodeId(start_node_id,end_node_id,startPathLength,endPathLength);
+    }
+    public GraphResult queryRelationOnExtendTreeByNodeId(List<Long> ids,int maxLevel,String relationshipFilter,String labelFilter ){
+        return queryApi.searchNodeRelationOnExtendTreeByNodeIdIn(ids,maxLevel,relationshipFilter,labelFilter);
+    };
+    public GraphResult queryRelationOnExtendTreeByNodeId(long id,int maxLevel,String relationshipFilter,String labelFilter  ){
+        return queryApi.searchNodeRelationOnExtendTreeByNodeIdIn(Arrays.asList(id),maxLevel,relationshipFilter,labelFilter);
+    };
+    public GraphResult queryRelationOnExtendTreeByNodeId(long id,int maxLevel ){
+        return queryApi.searchNodeRelationOnExtendTreeByNodeIdIn(Arrays.asList(id),maxLevel,null,null);
+    };
+    public GraphResult queryRelationOnExtendTreeByNodeId(List<Long> ids,int maxLevel ){
+        return queryApi.searchNodeRelationOnExtendTreeByNodeIdIn(ids,maxLevel,null,null);
+    };
 }

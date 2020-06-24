@@ -10,7 +10,7 @@ import casia.isiteam.api.neo4j.operation.interfaces.Neo4jOperationApi;
  * Created by casia.wzy on 2020/5/21
  * Email: zhiyou_wang@foxmail.com
  */
-public class Routers extends Neo4jDriverStatus {
+public abstract class Routers extends Neo4jDriverStatus {
     protected static Neo4jOperationApi.CreateApi createRouter;
     protected static Neo4jOperationApi.QueryApi queryRouter;
     protected static Neo4jOperationApi.DeleteApi deleteRouter;
