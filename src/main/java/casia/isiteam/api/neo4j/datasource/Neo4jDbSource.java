@@ -6,6 +6,7 @@ import casia.isiteam.api.neo4j.common.manage.status.Neo4jDriverStatus;
 import casia.isiteam.api.neo4j.datasource.manage.DataPoolManage;
 import casia.isiteam.api.neo4j.util.LogsUtil;
 import casia.isiteam.api.toolutil.Validator;
+import casia.isiteam.api.toolutil.random.CasiaRandomUtil;
 import casia.isiteam.api.toolutil.regex.CasiaRegexUtil;
 import com.alibaba.druid.pool.DruidDataSource;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -61,8 +62,9 @@ public class Neo4jDbSource extends Neo4jDriverStatus {
     protected DruidDataSource NeoDriver(){
         if( Validator.check(dbinfo) ){
             if( Validator.check(dbinfo.getDbname()) ){
-                return _dataPool.get(dbinfo.getDbname());
-            }else{if( _dataPool.containsKey(dbinfo.hexMd5()) ){ return _dataPool.get(dbinfo.hexMd5());}else{ synchronized (_dataPool){_dataPool.put(dbinfo.hexMd5(),DataPoolManage.initDataPool(dbinfo));}return _dataPool.get(dbinfo.hexMd5()); }
+                return _dataPool.get(dbinfo.getDbname()).get(CasiaRandomUtil.randomNumber(0,_dataPool.get(dbinfo.getDbname()).size()-1));
+            }else{if( _dataPool.containsKey(dbinfo.hexMd5()) ){ return _dataPool.get(dbinfo.getDbname()).get(CasiaRandomUtil.randomNumber(0,_dataPool.get(dbinfo.hexMd5()).size()-1));} else{ synchronized (_dataPool){_dataPool.put(dbinfo.hexMd5(),DataPoolManage.initDataPool(dbinfo));}
+                return _dataPool.get(dbinfo.getDbname()).get(CasiaRandomUtil.randomNumber(0,_dataPool.get(dbinfo.hexMd5()).size()-1)); }
             }
         }else{
             logger.error(LogsUtil.compositionLogEmpty("The neo4j dbsource") );

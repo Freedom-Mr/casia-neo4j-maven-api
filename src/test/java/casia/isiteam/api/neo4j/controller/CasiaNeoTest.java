@@ -26,7 +26,7 @@ public class CasiaNeoTest extends TestCase {
      * 创建测试
      */
     public void testCreateNode() {
-        CasiaNeo4j casiaNeo4j = new CasiaNeo4j("disk");
+        CasiaNeo4j casiaNeo4j = new CasiaNeo4j("sz_create");
 
         //自定义
 //        boolean graphResult = casiaNeo4j.create().create("merge (a:创建{_uuId:'123'}) return *");
@@ -66,7 +66,7 @@ public class CasiaNeoTest extends TestCase {
 
 
     public void testCreateRelation() {
-        CasiaNeo4j casiaNeo4j = new CasiaNeo4j("disk");
+        CasiaNeo4j casiaNeo4j = new CasiaNeo4j("sz_create");
 
         Map<String,Object> parms = new HashMap<>();
         parms.put("status",1);
@@ -106,14 +106,16 @@ public class CasiaNeoTest extends TestCase {
     }
 
     public void testQuery() {
-        CasiaNeo4j casiaNeo4j = new CasiaNeo4j("suo");
+        CasiaNeo4j casiaNeo4j = new CasiaNeo4j("sz_query");
 //        CasiaNeo4j casiaNeo4j = new CasiaNeo4j("root","123",new String[]{"192.168.1.1:50001","192.168.1.2:50001"});
 //        GraphResult graphResult = casiaNeo4j.query().queryByCondition("match (a) - [b] - ()   WITH b,COLLECT(distinct a._uuId) as c,COLLECT(distinct a) as d  return  *");
 
 //        String cql = "MATCH (a:发射任务) WHERE id(a) in[52,53] \n" +
 //                "CALL apoc.path.spanningTree(a, {relationshipFilter:'航天阵位',relationshipFilter:'火箭信息',limit:30}) YIELD path " +
 //                "RETURN *";
-        String cql="match (a)-[:发帖|转发]-()-[:评论]-(c) where id(a)=473 or id(c)=473 with COLLECT(distinct c) as cc SKIP 0 LIMIT 10  return cc";
+//        String cql="match (a)-[:发帖|转发]-()-[:评论]-(c) where id(a)=473 or id(c)=473 with COLLECT(distinct c) as cc SKIP 0 LIMIT 10  return cc";
+//        String cql="call dbms.cluster.routing.getServers";
+        String cql="call dbms.cluster.role";
 
         GraphResult graphResult = casiaNeo4j.query().queryByCondition(cql);
 //        GraphResult graphResult = casiaNeo4j.query().queryByCondition("match p=(a)-[*0..1]-() return * limit 10");
@@ -177,7 +179,6 @@ public class CasiaNeoTest extends TestCase {
 //        GraphResult graphResult = casiaNeo4j.query().queryNodeOnFullByQueryString("all","I");
 //        GraphResult graphResult = casiaNeo4j.query().queryRelationOnFullByQueryString("测试关系","北京");
         out(graphResult);
-
     }
 
 

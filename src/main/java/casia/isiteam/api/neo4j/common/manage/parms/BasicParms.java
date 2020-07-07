@@ -67,6 +67,7 @@ public class BasicParms extends Neo4jParms{
     public final static String RIGHT_PARENTHESES = ")";
     public final static String RIGHT_BRACES = "}";
     public final static String RIGHT_BRACKETS = "]";
+    public final static String COMMA_OR_SEMICOLON = COMMA+LINE+SEMICOLON;
 
     public final static String RANGE_PATH_1_6 = "*1..6";
     public final static String RANGE_PATH_1_ = "*1..";

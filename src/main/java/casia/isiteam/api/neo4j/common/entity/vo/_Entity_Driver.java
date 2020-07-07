@@ -6,6 +6,7 @@ import casia.isiteam.api.toolutil.regex.CasiaRegexUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ClassName: _Entity_Driver
@@ -70,11 +71,13 @@ public class _Entity_Driver extends BasicParms {
         this.dbname = dbname;
     }
 
-    public String getBolt() {
-        return Validator.check(this.address) ? BOLT_COLON_SLASH+address.stream().findFirst().get() : NULL;
+    public List<String> getBolt() {
+        return Validator.check(this.address) ?
+                this.address.stream().map(s->BOLT_COLON_SLASH+s).collect(Collectors.toList()) : new ArrayList<>();
     }
-    public String getJdbcBolt() {
-        return Validator.check(this.address) ? JDBC_BOLT_COLON_SLASH+address.stream().findFirst().get() : NULL;
+    public List<String> getJdbcBolt() {
+        return Validator.check(this.address) ?
+                this.address.stream().map(s->JDBC_BOLT_COLON_SLASH+s).collect(Collectors.toList()) : new ArrayList<>();
     }
 
     public String getUsername() {

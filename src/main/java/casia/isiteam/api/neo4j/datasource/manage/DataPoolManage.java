@@ -22,27 +22,38 @@ import java.util.*;
  */
 public class DataPoolManage extends BasicParms {
     private static Logger logger = LoggerFactory.getLogger( DataPoolManage.class);
-    public static DruidDataSource initDataPool(Map<String,Object> parms){
-        DruidDataSource dataSource = new DruidDataSource();
+    public static List<DruidDataSource> initDataPool(Map<String,Object> parms){
+        List<DruidDataSource> dataSources = new ArrayList<>();
         try {
-            Properties newProperties = new Properties();
-            parms.forEach((k,v)->{
-                newProperties.put(PROPERTY_PREFIX+DOT+(k.equals(BLOT)?URL:k),k.equals(BLOT)?JDBC_BOLT_COLON_SLASH+v:v);
-            });
-            dataSource.setConnectProperties(newProperties);
+            if( parms.containsKey(BLOT) && Validator.check(parms.get(BLOT)) ){
+                String[] blots = parms.get(BLOT).toString().split(COMMA_OR_SEMICOLON);
+                for(String blot:blots){
+                    Properties newProperties = new Properties();
+                    parms.forEach((k,v)->{
+                        newProperties.put(PROPERTY_PREFIX+DOT+(k.equals(BLOT)?URL:k),k.equals(BLOT)?JDBC_BOLT_COLON_SLASH+blot:v);
+                    });
+                    DruidDataSource druidDataSource = new DruidDataSource();
+                    druidDataSource.setConnectProperties(newProperties);
+                    dataSources.add(druidDataSource);
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return dataSource;
+        return dataSources;
     }
-    public static DruidDataSource initDataPool(_Entity_Driver _entity_Driver ){
-        DruidDataSource dataSource = new DruidDataSource();
-        dataSource.setDriverClassName(JDBC_DRIVER);
-        dataSource.setUrl( _entity_Driver.getJdbcBolt() );
-        dataSource.setUsername(_entity_Driver.getUsername());
-        dataSource.setPassword(_entity_Driver.getPassword());
+    public static List<DruidDataSource> initDataPool(_Entity_Driver _entity_Driver ){
+        List<DruidDataSource> dataSources = new ArrayList<>();
+        _entity_Driver.getJdbcBolt().forEach(s->{
+            DruidDataSource dataSource = new DruidDataSource();
+            dataSource.setDriverClassName(JDBC_DRIVER);
+            dataSource.setUrl(s);
+            dataSource.setUsername(_entity_Driver.getUsername());
+            dataSource.setPassword(_entity_Driver.getPassword());
 //        dataSource.setMinIdle(5);
-        dataSource.setMaxWait(30000);
-        return dataSource;
+            dataSource.setMaxWait(30000);
+            dataSources.add(dataSource);
+        });
+        return dataSources;
     }
 }

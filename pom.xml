@@ -4,7 +4,7 @@
 
     <groupId>casia.isiteam</groupId>
     <artifactId>casia-neo4j</artifactId>
-    <version>3.5.4.0.3</version>
+    <version>3.5.4.0.4</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -17,7 +17,7 @@
         <dependency>
             <groupId>casia.isiteam</groupId>
             <artifactId>casia-util</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
         </dependency>
 
         <!--NEO4J JAVA DRIVER-->
